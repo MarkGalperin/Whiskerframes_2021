@@ -101,6 +101,8 @@ function complete = optimization_animate(traj,bio_points,bio_angles,error,s,mode
 
         %% format plot
         axis equal
+        xlabel('x');
+        ylabel('y');    
         axis([-2 1 -0.5 1.5])
         
         %% Add to animation

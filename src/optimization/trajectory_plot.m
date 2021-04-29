@@ -20,7 +20,7 @@ function Fig = trajectory_plot(traj,thbounds)
     x_start = xm;
 
     %% get color map
-    colors = parula(100); %using the colormap "turbo"
+    colors = parula(100); %using the colormap "parula"
         
     %% trajectory loop
     for ii = 1:loops
@@ -48,6 +48,8 @@ function Fig = trajectory_plot(traj,thbounds)
     hold off
     axis equal
     axis([-1.75 0.25 -0.5 1.5])
+    xlabel('x');
+    ylabel('y');
     h = colorbar('AxisLocation','out');
     ylabel(h,'θ (rad)');
     %% save figure
