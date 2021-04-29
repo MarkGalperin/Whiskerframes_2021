@@ -19,8 +19,8 @@ ANG = DATA.angles; %[T,N]
 
 %% OPTIMIZATION MODE AND SETUP
 % 3 modes: 'line_3dof' , 'line_1dof', 'circular'
-mode =   'line_1dof';
-file = 'apr26test';
+mode =   'line_3dof';
+file = 'apr28test';
 animate = true;
 
 %% Define optimization constraints as struct C

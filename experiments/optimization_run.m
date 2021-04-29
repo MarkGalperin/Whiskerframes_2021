@@ -39,7 +39,7 @@ for tr = 1:length(K)
     
     %run program script
     fprintf('*** RUNNING TRIAL %d ***\n',tr);
-    complete = do_trajectory_optimization_v2('line_3dof',file,true,trial);
+    complete = do_trajectory_optimization_v2('line_3dof',file,false,trial);
     fprintf('*** COMPLETED TRIAL %d ***\n\n\n',tr);
     
 end

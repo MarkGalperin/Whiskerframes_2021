@@ -1,4 +1,4 @@
-function Fig = plot_shadedcomp(X,Y1,Y2)
+function Fig = plot_shadedcomp(X,Y1,Y2,w)
 % *** SHADED COMPARISON PLOT ***
 % Summary of this function goes here
 %   Detailed explanation goes here
@@ -57,8 +57,11 @@ function Fig = plot_shadedcomp(X,Y1,Y2)
     plot(X,Y1,'m','LineWidth',width)
     plot(X,Y2,'g','LineWidth',width)
     
-    %% format plot    
+    %% format plot
+    ystr = sprintf('θ%d',w);
+    ylabel(ystr);
     hold off
+    
 %     ylim([-pi/2,pi/2])
     
     %% return figure

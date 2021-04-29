@@ -94,8 +94,8 @@ function complete = optimization_animate(traj,bio_points,bio_angles,error,s,mode
         
         
         %% annotate error
-        err = sprintf('sum mean error = %f',error(t));
-        text(0,-0.25,err)
+        err = sprintf('mean error = %f rad',error(t));
+        text(-0.25,-0.25,err)
         
         hold off
 
