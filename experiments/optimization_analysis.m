@@ -8,9 +8,9 @@ addpath('../src')
 addpath('../src/figures');
 
 %% Get Trial data
-trial = 'const035.mat';
-path = '../output/trial_data/4_28/trial_data/';
-TABLE = readtable('../output/trial_data/4_28/trial_data/TRIALS_Apr28.csv');
+path = '../output/trial_data/3dof_trials/trial_data/';
+tfile = 'TRIALS_3dof.csv';
+TABLE = readtable([path,tfile]);
 % 
 % loadstr = append(path,trial);
 % TRIAL = load(loadstr);

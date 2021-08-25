@@ -40,7 +40,7 @@ function Fig = plot_shadedcomp(X,Y1,Y2,w)
         inBetween = [Y1(rng), fliplr(Y2(rng))];
 
         %plot
-        fill(X2, inBetween,'g','LineStyle','none','FaceAlpha',0.5);
+        fill(X2, inBetween,'r','LineStyle','none','FaceAlpha',0.25); %Aug 10th update: changed this from green to red and alpha from 0.5 to 0.25
     end
     for ii = 1:size(Xb1,1)
         %get polygon data
@@ -54,11 +54,11 @@ function Fig = plot_shadedcomp(X,Y1,Y2,w)
     
     %get two curves
     width = 1;
-    plot(X,Y1,'m','LineWidth',width)
-    plot(X,Y2,'g','LineWidth',width)
+    plot(X,Y1,'k','LineWidth',width)
+    plot(X,Y2,'r','LineWidth',width)
     
     %% format plot
-    ystr = sprintf('θ%d',w);
+    ystr = sprintf('Θ%d',w);
     ylabel(ystr);
     hold off
     

@@ -20,17 +20,17 @@ ANG = DATA.angles; %[T,N]
 %% OPTIMIZATION MODE AND SETUP
 % 3 modes: 'line_3dof' , 'line_1dof', 'circular'
 mode =   'line_3dof';
-file = 'apr28test';
+file = 'blep';
 animate = true;
 
 %% Define optimization constraints as struct C
 C.c = 0.1; %compatability tolerance
-C.R = 0.1; %jump tolerance
-C.dtheta = pi/10; %theta jump tolerance
+C.R = 10; %jump tolerance
+C.dtheta = pi/2; %theta jump tolerance
 
 %% Initialize optimization 
 %initialize s
-s = 0.45;
+s = 0.75;
 
 % initialize values for x = [r1,r2,theta]
 xa = [-0.5,1,-0.45];

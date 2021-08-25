@@ -1,4 +1,4 @@
-function complete = optimization_animate(traj,bio_points,bio_angles,error,s,mode,file)
+function complete = optimization_animate(TRIAL)
     % *** ANIMATING THE OPTIMIZATION OUTPUT ***
     % This function takes the trajectory obtained by the optimization
     % program and animates both the whiskers and the frames
@@ -11,6 +11,15 @@ function complete = optimization_animate(traj,bio_points,bio_angles,error,s,mode
     %       file: (str)name of 
     
     %% Initialize
+    %Unpack Trial
+    traj = TRIAL.traj;
+    bio_points = TRIAL.PTS_bio;
+    bio_angles = TRIAL.ANG_bio;
+    error = TRIAL.error;
+    s = TRIAL.s;
+    mode = TRIAL.mode;
+    file = TRIAL.file;
+
     %Initialize animation
     T = size(traj,1);
     N = size(bio_points,2);
@@ -54,24 +63,46 @@ function complete = optimization_animate(traj,bio_points,bio_angles,error,s,mode
             %protraction
             u = F-C;
             prot = atan(u(2)/u(1));
+            bias = TRIAL.constraints.bias(n);
             
             %plot the rods
             plot([C(1),F(1)],[C(2),F(2)],'-g','LineWidth',1)
             
             %also plot whiskers?
         
-        %% plotting bio whiskers
-        
-            %plotting little unit vectors for the output
+        %% plotting whiskers
+            %decide whether to plot green (normal) or yellow (bias offset)
             veclen = 0.25;
-            plot([F(1), F(1)+veclen*cos(prot)],[F(2), F(2)+veclen*sin(prot)],'g','LineWidth',2)
+            if all(TRIAL.constraints.bias == 0)
+               %plot mechanism whisker
+               plot([F(1), F(1)+veclen*cos(prot)],[F(2), F(2)+veclen*sin(prot)],'g','LineWidth',2) 
+            else
+               %plot offset bias whisker
+               plot([F(1), F(1)+veclen*cos(prot+bias)],[F(2), F(2)+veclen*sin(prot+bias)],'b','LineWidth',2)
+            end
         
             %plotting a little unit vector for bio pts
             angle = bio_angles(t,n);
             plot([F(1), F(1)+veclen*cos(angle)],[F(2), F(2)+veclen*sin(angle)],'m','LineWidth',2)
             
+            %determine Pmin and Pmax
+            wc = [s*sqrt(1-s^2);(1-s)];
+            Pmax = atan((F(2)*wc(2)-CF1(2))/(F(2)*wc(1)-CF1(1)));
+            Pmin = atan((F(2)*wc(2)-CF1(2))/(-F(2)*wc(1)-CF1(1)));
+            %plot Pmin and Pmax 
+%             plot([F(1), F(1)+(0.5)*veclen*cos(Pmax)],[F(2), F(2)+(0.5)*veclen*sin(Pmax)],'MarkerEdgeColor',[0.8500, 0.3250, 0.0980],'LineWidth',1)
+%             plot([F(1), F(1)+(0.5)*veclen*cos(Pmin)],[F(2), F(2)+(0.5)*veclen*sin(Pmin)],'MarkerEdgeColor',[0.8500, 0.3250, 0.0980],'LineWidth',1)
+            
             %plot the point
-            plot(F(1),F(2),'o','MarkerEdgeColor','black','MarkerFaceColor','white');
+            if strcmp(mode,'line_1dof')
+                if (angle < Pmax && angle > Pmin) || (angle < Pmin && angle > Pmax) %if angle is between
+                        plot(F(1),F(2),'o','MarkerEdgeColor','black','MarkerFaceColor','red');    
+                else
+                    plot(F(1),F(2),'o','MarkerEdgeColor','black','MarkerFaceColor','white');
+                end
+            else
+                plot(F(1),F(2),'o','MarkerEdgeColor','black','MarkerFaceColor','white');
+            end
         
          
         %% add debugging annotations

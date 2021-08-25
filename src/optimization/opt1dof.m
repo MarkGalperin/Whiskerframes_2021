@@ -1,14 +1,11 @@
 function [opt, fval, graph] = opt1dof(obj,bounds,res,con)
-% *** STUPID 1-DOF OPTIMIZER ***
-%   simple stupid fucking optimizer fucking stupid can you believe this
-%   shit is so easy just loop through the damn numbers i dont care how long
-%   it takes i gotta go get published like come on just become a stupid
-%   monkey and crunch those numbers i am a dunce
+% *** 1-DOF OPTIMIZER ***
+%   Brute-force optimizer for the 1-DOF case
 %   
 %   Takes:    obj: objective function of one variable
 %          bounds: [upper bound , lower bound] for the variable
 %             res: resolution of the search
-%             con: constraint function defined as for fmincon
+%             con: constraint function defined same as for fmincon
 %
 %   Returns: opt: optimal variable
 %           fval: function evaluated at that variable

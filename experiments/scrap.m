@@ -2,11 +2,91 @@
 clear;
 clc;
 
-%% trying out table
-LastName = {'Sanchez';'Johnson';'Li';'Diaz';'Brown'};
-Age = [38;43;38;40;49];
-BloodPressure = [124 93; 109 77; 125 83; 117 75; 122 80];
-T = table(LastName,Age,BloodPressure);
+%% Remembering how to get MSEset
+
+
+% %% making a fake messy curve
+% X = 0:0.01:2;
+% Y = (X-1).^3 - X + 2 + 0.1*rand(size(X));
+% 
+% %% making an agent follow Y...
+% y0 = Y(1);
+% for ii = 1:length(Y)
+%     if ii == 1
+%     elseif ii == 2
+%     else
+%         %make fake optimizing search
+%         y_s = (ym-0.1):0.001:(y_s+0.1); %search over 100 values
+%         %faulty error optimizer 
+%         E = ones(size(y_s))*Inf; %initialize error
+%         %loop
+%         for jj = 1:length(y_s)
+%             %get faulty error
+%             E(jj) = y;
+%         end
+%     end
+% end
+% 
+% 
+% %% plot
+% plot(X,Y,'-b');
+% 
+
+
+% %% NaN correction edge cases
+% % define matrices
+% a = randi([0,10],10,5);
+% %define NaNs
+% a(2,3) = NaN;
+% a(6:end,4) = NaN;
+% a(1:3,2) = NaN;
+% a_inp = a;
+% NaNs = isnan(a);
+% %% interpolating to replace NaN values
+% for n = 1:size(NaNs,2) %iterate over columns (whiskers)
+%     %edge case 1: first row is NaN
+%     t = 1;
+%     if NaNs(1,n) 
+%         while NaNs(t,n)
+%             if NaNs(t+1,n)
+%                 t = t+1; %advance
+%             else
+%                 endi = t+1;
+%                 %set all values in column to first non-NaN value
+%                 a_inp(1:endi,n) = a(endi,n);
+%                 break
+%             end
+%         end
+%     end
+%     
+%     %edge case 2: last row is NaN
+%     if NaNs(end,n)
+%         t = size(NaNs,1); %set that last thing
+%         while NaNs(t,n)
+%             if NaNs(t-1,n)
+%                 t = t-1; %advance
+%             else
+%                 endi = t-1;
+%                 %set all values in column to first non-NaN value
+%                 a_inp(endi:end,n) = a(endi,n);
+%                 break
+%             end
+%         end
+%     end
+% 
+% 
+% 
+% end
+
+
+
+
+
+% %% trying out table
+% LastName = {'Sanchez';'Johnson';'Li';'Diaz';'Brown'};
+% Age = [38;43;38;40;49];
+% BloodPressure = [124 93; 109 77; 125 83; 117 75; 122 80];
+% T = table(LastName,Age,BloodPressure);
 
 % %% unpacking mousemap
 % path = '../data/MSE_cubic_all.mat';

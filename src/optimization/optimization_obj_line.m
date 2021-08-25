@@ -1,4 +1,4 @@
-function E = opterror(x,s,bio_pts,bio_ang)
+function [E,info] = optimization_obj_line(x,s,bio_pts,bio_ang,Cstruct)
     %OBJECTIVE FUNCTION - Mean whisker error as a function of config.
     %   This function returns the cost for a certain configuration of design
     %   variables 
@@ -6,10 +6,15 @@ function E = opterror(x,s,bio_pts,bio_ang)
     %           s: fixed length ratio
     %           bio_pts: (1xN) vector of biological y-points 
     %           bio_ang: (1xN) vector of biological output angles
+    %           mode: either "abs" or "squared" - for absolute value error
+    %           or squared error
     
     %% For all pts, calculate error
-    E = 0;
     N = size(bio_pts,2);
+    Errs = zeros(1,N);
+    Prot = zeros(1,N);
+    Dang = zeros(1,N);
+    
     for n = 1:N
         
         %project point to line
@@ -22,13 +27,30 @@ function E = opterror(x,s,bio_pts,bio_ang)
         
         %protraction
         u = F-C;
-        p = atan(u(2)/u(1));
+        P = atan(u(2)/u(1)) + Cstruct.bias(n); %NEW: add bias term
+        Prot(n) = P;
         
         %Calculate error
-        E = E + (1/N)*abs(p-bio_ang(n));
-        
-        %debug
-        %fprintf('y = %f, bio = %f, prot = %f, E = %f \n',y,bio_ang(ii),P,E);
+        d_ang = P-bio_ang(n);
+        Dang(n) = d_ang;
+        switch Cstruct.errmode
+            case 'abs'
+                Errs(n) = abs(d_ang);
+            case 'squared'
+                Errs(n) = (d_ang)^2;
+            case '4'
+                Errs(n) = (d_ang)^4;
+        end
     end
+    %% return mean error E
+    E = mean(Errs);
+    
+    %% return info
+    if Cstruct.objinfo
+        info = [Prot ; bio_ang ; Dang ; Errs];
+    else
+        info = NaN(4,N);
+    end
+    
 end
 
