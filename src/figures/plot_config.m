@@ -81,9 +81,9 @@ function Fig = plot_config(S,TRIAL,X,prot)
         end
         if S.conf_biospread{1}
             %get mean bio angles
-            ANG_top = TRIAL.ANG_bio(:,1);
-            ANG_bot = TRIAL.ANG_bio(:,2);
-            ANG_spread = abs(ANG_top-ANG_bot);
+            ANG_top = TRIAL.ANG_bio(:,end);
+            ANG_bot = TRIAL.ANG_bio(:,1);
+            ANG_spread = (ANG_top-ANG_bot);
             %plot
             plot(X,ANG_spread(X),S.conf_biomeanp{2},'LineWidth',1)
             %append to legend

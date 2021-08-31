@@ -1,50 +1,48 @@
-%% AUTOMATING THE OPTIMIZATION SCRIPT
-% I'm tired of doing this by hand so I'm making this script do it
+%% BATCH TRIALS 
+% Running through permutations of parameters
 clear;
 clc;
 
-%% add files to path
-addpath('../src/optimization')
-addpath('./functionized/')
+%% Including code
+addpath('../src');
+addpath('../src/deming');
+addpath('../src/optimization');
 
-%% constraint and mode values
-dtheta_vals = [pi/20,pi/10,pi/8,pi/6,pi/4];
-R_vals = [0.05, 0.1, 0.2, 0.4, 0.8];
-s_vals = [0.3, 0.45, 0.6, 0.75];
-modes = {'_3dof'}; %i'll be doing these 1 at a time
+%% Batch trial settings
+biasalg = true;             %run bias algorithm, which performs two optimizations
+RES = [0.01, 0.01, 0.002];  %Set Resolution (warning, this effects running time exponentially)
 
-%% generate trials and constraint strings
-[TRIALS,constraints] = generate_runs(s_vals,R_vals,dtheta_vals);
+%% DEFINE PARAMETERS
+%define a cell datatype with the three dynamic constraint modes
+dynamics = {struct('R',10,'accel',10,'dtheta',pi/2,'ddtheta',10),...    %mode 1: no constraint
+            struct('R',1,'accel',0.1,'dtheta',pi/2,'ddtheta',0.05),...  %mode 2: high vel constraint med accel constraint
+            struct('R',1,'accel',0.5,'dtheta',pi/2,'ddtheta',0.01)};    %mode 3: high vel constraint tight accel constraint
 
-%% Initialize table
-trial_table = array2table(zeros(0,6));
-trial_table.Properties.VariableNames = {'TrialNum','file_name','c', 'R','dtheta','s'};
+%put all values to loop over in cell arrays (WARNING currently only works for current multiple-value arrays)
+PARAMS = struct('s',{0.3,0.45,0.6,0.75,0.9},...
+                'c',{0.1},...
+                'errmode',{'squared'},...
+                'res',{RES},...
+                'lb',{[-1 -0.2500 -1.0472]},...
+                'ub',{[0 1.2500 1.0472]},...
+                'sb',{[0.2000 0.2000 1.0472]},...
+                'bias',{'zeros'});
+            
+% Call generate_runs
+C_TRIALS = generate_runs(dynamics,PARAMS);
 
-%% LOOP: perform each trial
-K = keys(TRIALS);
-for tr = 1:length(K)
-    %fetch trial
-    trial = TRIALS(K{tr});
-    file = constraints{tr};
-    
-    %fetch values
-    c = trial.c;
-    R = trial.R;
-    dtheta = trial.dtheta;
-    s = trial.s;
-    
-    %log values in table
-    log_cell = {tr,file,c,R,dtheta,s};
-    trial_table = [trial_table;log_cell];
-    
-    %run program script
-    fprintf('*** RUNNING TRIAL %d ***\n',tr);
-    complete = do_trajectory_optimization_v2('line_3dof',file,false,trial);
-    fprintf('*** COMPLETED TRIAL %d ***\n\n\n',tr);
-    
-end
+%% GET DATA
 
-%% Saving the table
-name = 'TRIALS_Apr26.csv';
-table_file = append('../output/trial_data/',name);
-writetable(trial_table,table_file,'Delimiter',',');
+
+
+
+
+
+
+
+
+
+
+
+
+

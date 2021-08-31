@@ -37,7 +37,7 @@ function [opt, fval] = opt3dof(obj,lb,ub,res,con)
     %loop
     for ii = 1:length(X) 
         for jj = 1:length(Y)
-            for kk = 1:length(Z)
+            for kk = 1:length(Z) %lowest-level for loop
                 %flurp
                 x = [X(ii),Y(jj),Z(kk)];
 

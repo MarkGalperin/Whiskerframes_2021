@@ -16,7 +16,7 @@ function mousepoints = pp_mousemap2norm(row,includes,N)
     
     %% get full row of mseset points
     %points are projected onto the z-axis.
-    mserow = get_MSEset(row,'flattenz'); %homogeneous coords
+    mserow = get_MSEset(row,'flattenz_oconnor'); %homogeneous coords
     mse_includes = 0:(length(mserow)-1); %to compare with includes
     
     %% omit all whiskers not in includes

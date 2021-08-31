@@ -39,7 +39,11 @@ if RUN(4)
     tbl = readtable('../data/janelia/info.csv','Delimiter',',');
     % iterate over every file name
     nfiles = size(tbl,1);
-    files = 1:nfiles; %sub out for single number if just processing one
+%     files = 1:4; % Aug 2016 (B row, 4 whiskers)
+%     files = 5:10; % Sep 2016 (B row, 3 whiskers)
+%     files = 11:16; % 
+%     files = 17:nfiles; % 
+    files = 1:nfiles; %all files
 
 
     for ii = files

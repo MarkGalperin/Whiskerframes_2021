@@ -19,8 +19,11 @@ function data_out = get_MSEset(row,mode)
     ind = (k(:,1) == row);
     
     %% get Gamma whisker (NEW: for oconnor data)
+    ind_gam = (k(:,1) == 'C');
+    Crow = transpose(k_gam(ind_gam,:));
+    Gamm
     %index data
-    s_gam = data('C01');
+    s_gam = data(point_gam);
     %get spherical
     R = mean(s_gam.BPR);
     th = mean(s_gam.BPTheta);
@@ -71,7 +74,7 @@ function data_out = get_MSEset(row,mode)
         end
         %now, replace "Beta" with "Gamma"
         if strcmp(row,'B')
-            out(1:3,1) = gamma;
+            
         end
     elseif strcmp(mode,'rotate')
         data_out = 'poopy';

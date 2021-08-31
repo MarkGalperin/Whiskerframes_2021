@@ -1,40 +1,54 @@
-function [TRIALS,constraints] = generate_runs(s_vals,R_vals,dtheta_vals)
+function TRIALS = generate_runs(dynamics,params)
 % *** GENERATING MANY TRIALS ***
-    % This function takes the biological datasets and produces arrays of
-    % points for inputting into the search experiment.
+    % This function generates trials for batch experiments
     %
-    % Takes Input1: DJKFHDS
+    % Takes Input1: dynamics: a 
     %       Input2: SDFDS
     % 
-    % Returns   DSFSDF
-    %
-
-    %% generating the trials map
-    %building constraint structs in a "Map" container
-    TRIALS = containers.Map('KeyType','char','ValueType','any');
-    constraints = {};
+    % Returns TRIALS, a multidimensional struct of 
+    %  
     
-    c = 0;
-    for s = s_vals
-        for R = R_vals
-            for dth = dtheta_vals
-                %make string
-                c = c+1;
-                constr = append('const',num2str(c,'%03d'));
-
-                %append to constraints cell
-                constraints{end+1} = constr;
-
-                %make struct
-                C.c = 0.1;
-                C.R = R;
-                C.dtheta = dth;
-                C.s = s;
-
-                %add to map
-                TRIALS(constr) = C;
-            end
+    %unpack values
+    s_vals = [params.s];
+    
+    %% loop over parameters...
+    ct = 0;
+    for si = 1:length(s_vals) % iterate over s vals...
+        for dyni = 1:length(dynamics) 
+            %trial count
+            ct = ct+1;
+            
+            %Assign looping values to struct
+            TRIALS(ct).s = s_vals(si);
+            TRIALS(ct).R = dynamics{dyni}.R;
+            TRIALS(ct).accel = dynamics{dyni}.accel;
+            TRIALS(ct).dtheta = dynamics{dyni}.dtheta;
+            TRIALS(ct).ddtheta = dynamics{dyni}.ddtheta;
+            
+            %non-looping (as of 8/30) parameters
+            TRIALS(ct).res = params.res;
+            TRIALS(ct).c = params.c;
+            TRIALS(ct).errmode = params.errmode;
+            TRIALS(ct).lb = params.lb;
+            TRIALS(ct).ub = params.ub;
+            TRIALS(ct).sb = params.sb;
+            TRIALS(ct).sb = params.sb;
+            TRIALS(ct).bias = params.bias;
+            
+            %mandatory
+            TRIALS(ct).objinfo = true;
+            
+%             %print values
+%             fprintf('---TRIAL %d--- \n',ct);
+%             fprintf('s =  %f \n',s);
+%             fprintf('dynamic constraint %d \n',dyni);
+%             fprintf('R =  %f \n',R);
+%             fprintf('accel =  %f \n',accel);
+%             fprintf('dtheta =  %f \n',dtheta);
+%             fprintf('ddtheta =  %f \n',ddtheta);
+            
         end
     end
-end
+    
+
 
