@@ -18,11 +18,11 @@ addpath('../src')
 addpath('../src/figures');
 
 %% Get (1) trial data TODO: make all
-% loadstr = '../output/trial_data/3dof_aug17test.mat'; 
+loadstr = '../output/trial_data/Sep1test_thetalim1_stest2.mat'; 
 % loadstr = '../output/trial_data/post_filtered/restest8_filt.mat'; 
 % loadstr = '../output/trial_data/3dof_restest8.mat'; 
 % loadstr = '../output/trial_data/hjhjg_evenbias.mat'; 
-loadstr = '../output/trial_data/bias/two/test2.mat'; 
+% loadstr = '../output/trial_data/bias/two/test2.mat'; 
 % loadstr = '../output/trial_data/3dof_newdata2.mat'; 
 
 TRIAL = load(loadstr);
@@ -50,7 +50,7 @@ multi = true;
 if multi
     %% file setup
     multidir = '../output/figures/multi/';
-    file = 'aug25_live';
+    file = 'Sep1test_thlim_stest2';
     filepath = [multidir,file];
     %make directory
     mkdir(filepath)

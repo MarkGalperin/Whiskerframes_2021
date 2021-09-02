@@ -18,7 +18,8 @@ addpath('../src/optimization');
 %% Fetch pre-processed data
 % DATA_i = load('../data/processed/filtered/dlc_MSE_filt.mat');
 % DATA_i = load('../data/processed/filtered/filt_janelia_2_(8_31_16).mat');
-DATA_i = load('../data/processed/filtered/filt_janelia_19_(2_09_18).mat');
+DATA_i = load('../data/processed/filtered/filt_janelia_15_(3_25_17).mat');
+% DATA_i = load('../data/processed/filtered/filt_janelia_19_(2_09_18).mat');
 
 %% cut down the data to a manageble or target time range
 X = 1:427; %X = 1:size(DATA_i.ANG,1)
@@ -30,7 +31,7 @@ DATA.points = PTS_cut;
 
 
 %% Define optimization constraints as struct C
-C.s = 0.75;
+C.s = 0.9;
 %compatability constraint
 C.c = 0.1; %compatability tolerance
 %error mode
@@ -44,6 +45,7 @@ C.dtheta = (pi/2); %theta jump tolerance
 C.ddtheta = 0.05; %theta acceleration constraint
 % C.jerk = .5; %third-order constraint
 % C.jth = .5;
+C.thlim = true; %theta limit option - works as a compatability constraint
 %search parameters
 C.res = [0.01,0.01,0.01]; %search resolution for r1,r2,th
 C.lb = [-1,-0.25,-pi/3]; %lower value bounds
@@ -51,9 +53,12 @@ C.ub = [0,1.25,pi/3]; %upper value bounds
 C.sb = [0.2,0.2,pi/3]; %search box absolute dimensions
 C.bias = zeros(1,size(ANG_cut,2)); %initial biases are zero
 
+%omit point data?
+C.omit = [5]; %omit whisker 5
+
 %% OPTIMIZATION MODE AND SETUP
 mode = 'line_3dof';   % 3 modes: 'line_3dof' , 'line_1dof', 'circular' (circular not yet implemented)
-file = 'parfortest_0';         % file name
+file = 'Mar2017set_debug';         % file name
 animate = 0;         % generate animation?
 
 %% Run optimization

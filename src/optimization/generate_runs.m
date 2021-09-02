@@ -37,6 +37,7 @@ function TRIALS = generate_runs(dynamics,params)
             
             %mandatory
             TRIALS(ct).objinfo = true;
+            TRIALS(ct).thlim = true;
             
 %             %print values
 %             fprintf('---TRIAL %d--- \n',ct);

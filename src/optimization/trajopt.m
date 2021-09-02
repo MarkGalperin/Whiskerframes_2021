@@ -37,11 +37,16 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
     PTS = DATA.points;
     ANG = DATA.angles;
     
+    %% apply omits to point data 
+    if isfield(C,'omit') 
+        %applying omit via logical indexing
+        PTS(:,C.omit,:) = [];
+    end
 
     %% Optimization Loop
     %INITIALIZE
-    T = size(PTS,3);
-    N = size(PTS,2);
+    T = size(ANG,1); %9/2 changed to ANG to cover discrepancies
+    N = size(ANG,2);
     x_log = zeros(T,3);
     E_log = zeros(T,1);
     info_log = zeros(4,N,T);
@@ -81,6 +86,22 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
                 %get search box as function of previous state
                 SB_u = xm + (0.5)*C.sb;
                 SB_l = xm - (0.5)*C.sb;
+                
+                %evaluate theta limits (compatibility)
+                % THIS USES PREVIOUS STATE WHICH IS NOT FULLY CORRECT. (the
+                % alternative is a very complicated time-inefficient
+                % calculation) NOTE IF THIS CAUSES ANY ERRORS OR
+                % OVER-CONSTRAINT!
+                if C.thlim
+                    w1 = C.s*sin(xm(3));
+                    w2 = 1-C.s*cos(xm(3));
+                    th_lower = atan((w2-xm(2))/(w1-xm(1))) - pi/2;
+                    th_upper = atan(xm(2)/xm(1)) + pi/2;
+                    %assign to search frame
+                    SB_l(3) = th_lower;
+                    SB_u(3) = th_upper;
+                end
+                
                 if any(isnan(xm)) %first frame chooses from entire seach space
                     xlb = C.lb;
                     xub = C.ub;
@@ -97,7 +118,8 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
                     %assign local search space
                     xlb = SB_l;
                     xub = SB_u;
-                end
+                end               
+                
 
                 %run brute-force optimizer
                 res = C.res; %resolution for r1,r2,th
@@ -167,7 +189,12 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
                    'PTS_bio',PTS,...
                    'ANG_bio',ANG,...
                    'file',file);
-
+    
+    %calcuate absolute error mean          
+    info_derror = permute(info(3,:,:),[3 2 1]);
+    aem = mean(abs(info_derror));
+    TRIAL.abserrmean = aem;  
+               
     %% ANIMATE %%
     if animate
         complete = optimization_animate(TRIAL);

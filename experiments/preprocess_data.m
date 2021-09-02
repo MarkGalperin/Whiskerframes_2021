@@ -11,12 +11,12 @@ addpath('../src/preprocess');
 addpath('../src/circle_fit')
 
 %% Which datasets are we pre-processing?
-% true = perform this pre-process and write files. false = don't
-run_staticframes = false;
-run_deeplabcut = false;
-run_luciesdata = false;
-run_janelia = true;
-run_biofilter = false;
+% 1 = perform this pre-process and write files. 0 = don't
+run_staticframes = 0;
+run_deeplabcut = 0;
+run_luciesdata = 0;
+run_janelia = 1;
+run_biofilter = 1;
 RUN = [run_staticframes,...
         run_deeplabcut,...
         run_luciesdata,...
@@ -43,9 +43,8 @@ if RUN(4)
 %     files = 5:10; % Sep 2016 (B row, 3 whiskers)
 %     files = 11:16; % Mar 2017 (C row, 5 whiskers)
 %     files = 17:nfiles; % Feb 2018 (C row, 5 whiskers)
-    files = 1:10; %Just B row
-%     files = 1:nfiles; %all files
-
+%     files = 1:10; %Just B row
+    files = 1:nfiles; %all files
 
     for ii = files
         %get paths
@@ -55,7 +54,7 @@ if RUN(4)
         fprintf('Measurements: %s \n',mpath);
 
         %save info
-        savename = sprintf('/janelia_%d_(%s)',ii,tbl.date{ii});
+        savename = sprintf('/janelia_%.2d_(%s)',ii,tbl.date{ii}); %CHANGE MADE HERE IN POST
         savefile = append(path,savename);
 
         % measurements struct
@@ -69,7 +68,7 @@ if RUN(4)
         %plot whisker angles
         T = size(ANG,1);
         N = size(ANG,2);
-        plotangles = false;
+        plotangles = true;
         if plotangles
             figure('Renderer', 'painters', 'Position', [10 10 1500 300])
                 plot(1:T,ANG');
@@ -109,7 +108,7 @@ if RUN(4)
         save(savefile,'-struct','S');
 
         %% make animation?
-        animate_janelia = true;
+        animate_janelia = false;
         if animate_janelia
             figure('Renderer', 'painters', 'Position', [10 10 1000 300])
                 complete = preprocess_janelia_animate(S,other,savename);
