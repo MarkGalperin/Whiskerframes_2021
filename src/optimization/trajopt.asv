@@ -37,10 +37,8 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
     PTS = DATA.points;
     ANG = DATA.angles;
     
-    % set bias values if zeros
-    if strcmp(C.bias,'zeros')
-        C.bias = zeros(1,size(ANG,2));
-    end
+    % parse bias values
+    if strcmp
     
     %% apply omits to point data 
     if isfield(C,'omit') 

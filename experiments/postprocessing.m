@@ -23,14 +23,14 @@ RUN = [run_animate,...
 %% ANIMATE TRAJECTORIES
 %
 if RUN(1)
-    loadstr = '../output/trial_data/Mar2017set_debug.mat';  
+%     loadstr = '../output/trial_data/Mar2017set_debug.mat';  
 %     loadstr = '../output/trial_data/3dof_restest8.mat'; 
 %     loadstr = '../output/trial_data/post_filtered/restest8_filt.mat'; 
 %     loadstr = '../output/trial_data/bias/one/test1.mat'; 
-%     loadstr = '../output/trial_data/bias/two/test2.mat'; 
+    loadstr = '../output/trial_data/bias/two/test2.mat'; 
     
     TRIAL = load(loadstr);
-    TRIAL.file = 'thetalim_stest2';
+    TRIAL.file = 'blep';
     % Generate Animation
     complete = optimization_animate(TRIAL); %automatically saves to output/movies/optimization/
 end

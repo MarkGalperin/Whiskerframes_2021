@@ -21,14 +21,14 @@ RES = [0.02, 0.02, 0.002];  %Set Resolution (warning, this effects running time 
 
 %% DEFINE PARAMETERS
 %define a cell datatype with the three dynamic constraint modes
-dynamics = {struct('R',10,'accel',10,'dtheta',pi/2,'ddtheta',10),...    %mode 1: no constraint
-            struct('R',1,'accel',0.1,'dtheta',pi/2,'ddtheta',0.05),...  %mode 2: high vel constraint med accel constraint
-            struct('R',1,'accel',0.06,'dtheta',pi/2,'ddtheta',0.01)};   %mode 3: high vel constraint tight accel constraint
-% dynamics = {struct('R',1,'accel',0.06,'dtheta',pi/2,'ddtheta',0.01)};
+% dynamics = {struct('R',10,'accel',10,'dtheta',pi/2,'ddtheta',10),...    %mode 1: no constraint
+%             struct('R',1,'accel',0.1,'dtheta',pi/2,'ddtheta',0.05),...  %mode 2: high vel constraint med accel constraint
+%             struct('R',1,'accel',0.06,'dtheta',pi/2,'ddtheta',0.01)};   %mode 3: high vel constraint tight accel constraint
+dynamics = {struct('R',1,'accel',0.06,'dtheta',pi/2,'ddtheta',0.01)};
 
 
 %put all values to loop over in cell arrays (WARNING currently only works for current multiple-value arrays)
-PARAMS = struct('s',{0.3,0.45,0.6,0.75,0.9},...
+PARAMS = struct('s',{0.75},...  's',{0.3,0.45,0.6,0.75,0.9},
                 'c',{0.1},...
                 'errmode',{'squared'},...
                 'res',{RES},...
@@ -72,14 +72,14 @@ ALLX = {'skip',...   (#01 - Aug '16, B row, 4 whiskers)
         'skip',...   (#12 - Mar '17, C row, 5 whiskers)
         'skip',...   (#13 - Mar '17, C row, 5 whiskers)
         'skip',...   (#14 - Mar '17, C row, 5 whiskers) - use
-        1:10,...    (#15 - Mar '17, C row, 5 whiskers) - use
-        1:10,...   (#16 - Mar '17, C row, 5 whiskers) - use
+        'skip',...    (#15 - Mar '17, C row, 5 whiskers) - use
+        'skip',...   (#16 - Mar '17, C row, 5 whiskers) - use
         'skip',...   (#17 - Feb '18, C row, 5 whiskers)
-        1:10,...   (#18 - Feb '18, C row, 5 whiskers) - use
-        1:10,...    (#19 - Feb '18, C row, 5 whiskers) - use
+        'skip',...   (#18 - Feb '18, C row, 5 whiskers) - use
+        1:50,...    (#19 - Feb '18, C row, 5 whiskers) - use
         'skip',...   (#20 - Feb '18, C row, 5 whiskers)
         'skip',...   (#21 - Feb '18, C row, 5 whiskers)
-        1:10,...   (#22 - Feb '18, C row, 5 whiskers) - use
+        'skip',...   (#22 - Feb '18, C row, 5 whiskers) - use
         };
 skips = strcmp(ALLX,'skip');
 

@@ -23,15 +23,15 @@ addpath('../src/figures');
 % loadstr = '../output/trial_data/3dof_restest8.mat'; 
 % loadstr = '../output/trial_data/hjhjg_evenbias.mat'; 
 % loadstr = '../output/trial_data/bias/two/test2.mat'; 
-loadstr = '../output/trial_data/Mar2017set_debug.mat'; 
-% loadstr = '../output/trial_data/D19_C001.mat';
+% loadstr = '../output/trial_data/3dof_newdata2.mat'; 
+loadstr = '../output/trial_data/D19_C001.mat';
 
 %get trial (and filter for different output formats)
 TRIAL = load(loadstr);
 if isfield(TRIAL,'TRIAL') 
-    trialselect = 1; %1 or 2 to do regular or bias
-    TRIAL = TRIAL.TRIAL(trialselect);
+    TRIAL = TRIAL.TRIAL(1)
 end
+
 
 PTS = TRIAL.PTS_bio;
 ANG = TRIAL.ANG_bio;
@@ -57,7 +57,7 @@ multi = true;
 if multi
     %% file setup
     multidir = '../output/figures/multi/';
-    file = 'Sep7test_1';
+    file = 'grp';
     filepath = [multidir,file];
     %make directory
     mkdir(filepath)
