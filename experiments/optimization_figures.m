@@ -22,8 +22,8 @@ addpath('../src/figures');
 % loadstr = '../output/trial_data/post_filtered/restest8_filt.mat'; 
 % loadstr = '../output/trial_data/3dof_restest8.mat'; 
 % loadstr = '../output/trial_data/hjhjg_evenbias.mat'; 
-% loadstr = '../output/trial_data/bias/two/test2.mat'; 
-loadstr = '../output/trial_data/Mar2017set_debug.mat'; 
+loadstr = '../output/trial_data/bias/two/Sept28_test2.mat'; 
+% loadstr = '../output/trial_data/Sept24_reset_nocon3.mat'; 
 % loadstr = '../output/trial_data/D19_C001.mat';
 
 %get trial (and filter for different output formats)
@@ -57,21 +57,21 @@ multi = true;
 if multi
     %% file setup
     multidir = '../output/figures/multi/';
-    file = 'Sep7test_1';
+    file = 'Sep28_test2';
     filepath = [multidir,file];
     %make directory
     mkdir(filepath)
     
     %% configuration plot
     %PLOT SETTINGS IN STRUCT S
-    S.conf_r1r2 = {false,'-r','-m','-b'}; % r1,r2 configuration
+    S.conf_r1r2 = {true,'-r','-m','-b'}; % r1,r2 configuration
     S.conf_p1p2 = {false,'-r','-m','-b'}; % w basis configuration
-    S.conf_p1invp2 = {true,'-r','-m','-b'}; % w basis configuration with 1/p1
+    S.conf_p1invp2 = {false,'-r','-m','-b'}; % w basis configuration with 1/p1
     S.conf_v1v2 = {false}; % trajectory velocity
     S.conf_a1a2 = {false}; % trajectory acceleration
     S.conf_biomeanp = {false,'-k'};% mean protraction (biological)
-    S.conf_biospread = {true,'-g'};% mean protraction (biological)
-    S.conf_bioallp = {true,[0.5,0.5,0.5]}; % ALL whisker protractions (biological)
+    S.conf_biospread = {false,'-g'};% mean protraction (biological)
+    S.conf_bioallp = {false,[0.5,0.5,0.5]}; % ALL whisker protractions (biological)
         S.biomeans = true;
     S.conf_mecallp = {false,[0.5,0.5,0.5]}; % ALL whisker protractions (mechanical)
         S.mecmeans = true;
@@ -79,6 +79,7 @@ if multi
     S.conf_error = {false,'-k'}; %mean error
     %error normalized?
     S.normalized = 0;
+    S.overc = {true,'-r'};
     
     %range
     X = 1:size(prot,1);
@@ -95,7 +96,10 @@ if multi
     %generate plot
     N = size(ANG,2);
     ploterror = true;
-    comp_plots = plot_whiskercomp(X,N,ANG,info_prot,error);
+    if ~isfield(TRIAL,'overc')
+        TRIAL.overc = NaN;
+    end
+    comp_plots = plot_whiskercomp(X,N,ANG,info_prot,error,TRIAL.overc);
     
     %save plot
     comp_file = [file,'_comp']; 

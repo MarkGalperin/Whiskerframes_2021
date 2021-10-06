@@ -23,7 +23,7 @@ function [E,info] = optimization_obj_line(x,s,bio_pts,bio_ang,Cstruct)
         %get corresponding pts
         F = [0,y];
         c = [-sin(x(3)),cos(x(3))];
-        C = [x(1),x(2)] + c*s*y;
+        C = [x(1),x(2)] + c*s*y; %note: "C" is not the struct here. Its a vector.
         
         %protraction
         u = F-C;

@@ -97,7 +97,7 @@ function Fig = plot_config(S,TRIAL,X,prot)
                 biowhisk = TRIAL.ANG_bio;
             end
             %plot
-            plot(biowhisk,'Color',S.conf_bioallp{2},'LineWidth',1)
+            plot(biowhisk(X,:),'Color',S.conf_bioallp{2},'LineWidth',1)
             %append to legend
             LGD = [LGD,'biological whisker protractions'];
         end
@@ -132,6 +132,20 @@ function Fig = plot_config(S,TRIAL,X,prot)
             %append to legend
             LGD = [LGD,'mean error'];
         end
+        %plot overconstraint events
+        if S.overc{1}
+            if isfield(TRIAL,'overc')
+                events = find(TRIAL.overc);
+                if ~isempty(events)
+                    for linx = events
+                        top = pi/2;
+                        bottom = -pi/2;
+                        plot([linx,linx],[top,bottom],S.overc{2})
+                    end
+                end
+            end
+        end
+        
 
         %get constraint info (for title)
         C = TRIAL.constraints;

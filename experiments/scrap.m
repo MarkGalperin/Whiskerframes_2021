@@ -2,7 +2,25 @@
 clear;
 clc;
 
-%% Remembering how to get MSEset
+%% plotting out some filtered data
+DATA_i = load('../data/processed/filtered/filt_janelia_15_(3_25_17).mat');
+
+%% cut down the data to a manageble or target time range
+X = 1:500; %X = 1:size(DATA_i.ANG,1)
+ANG_cut = DATA_i.angles(X,:);
+PTS_cut = DATA_i.points(:,:,X);
+%get x and y for the first whisker
+X = reshape(PTS_cut(1,1,:),[500,1]);
+Y = reshape(PTS_cut(2,1,:),[500,1]);
+
+plot(ANG_cut)
+
+% subplot(1,3,1)
+%     plot(ANG_cut(:,1));
+% subplot(1,3,2)
+%     plot(X);
+% subplot(1,3,3)
+%     plot(Y);
 
 
 % %% making a fake messy curve
@@ -31,7 +49,6 @@ clc;
 % %% plot
 % plot(X,Y,'-b');
 % 
-
 
 % %% NaN correction edge cases
 % % define matrices

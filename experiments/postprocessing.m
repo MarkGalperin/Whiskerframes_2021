@@ -11,6 +11,7 @@ clc;
 addpath('../src')
 addpath('../src/deming')
 addpath('../src/preprocess');
+addpath('../src/optimization');
 addpath('../src/circle_fit')
 
 %% Which post-processes are we running?
@@ -27,10 +28,12 @@ if RUN(1)
 %     loadstr = '../output/trial_data/3dof_restest8.mat'; 
 %     loadstr = '../output/trial_data/post_filtered/restest8_filt.mat'; 
 %     loadstr = '../output/trial_data/bias/one/test1.mat'; 
-    loadstr = '../output/trial_data/bias/two/test2.mat'; 
-    
+%     loadstr = '../output/trial_data/bias/two/Sept28_test2.mat'; 
+    loadstr = '../output/trial_data/FULLBATCH/BatchSet_15/D15_C010.mat';    
+%     loadstr = '../output/trial_data/Sept24_reset_nocon3.mat';
+
     TRIAL = load(loadstr);
-    TRIAL.file = 'blep';
+    TRIAL.file = 'D15_C010';
     % Generate Animation
     complete = optimization_animate(TRIAL); %automatically saves to output/movies/optimization/
 end

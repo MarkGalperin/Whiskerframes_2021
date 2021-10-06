@@ -6,8 +6,7 @@ function TRIALS = batch_load(batch_dir)
 %
 %   Returns: TRIALS: cell array of structs with all the trial data
 
-
-    %scan directory
+    %% scan directory
     BATCHDIR = dir(batch_dir);
     BATCHNAMES = {BATCHDIR.name};
     trialnames = {};
@@ -18,7 +17,7 @@ function TRIALS = batch_load(batch_dir)
         end
     end
 
-    %% Open trials
+    %% Write Trial info to Tables
     %initialize cell array
     TRIALS = {};
     %loop

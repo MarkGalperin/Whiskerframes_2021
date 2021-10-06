@@ -38,11 +38,12 @@ C.dtheta = (pi/2); %theta jump tolerance
 C.ddtheta = 0.1; %theta acceleration constraint
 % C.jerk = .5; %third-order constraint
 % C.jth = .5;
-C.thlim = true; %theta limit option - works as a compatability constraint
+C.thlim = false; %theta limit option - works as a compatability constraint
 %search parameters
 C.res = [0.02, 0.02, 0.002]; %search resolution for r1,r2,th
-C.lb = [-2.5,-0.25,-pi/4]; %lower value bounds
-C.ub = [0,1,pi/2]; %upper value bounds
+C.lb = [-2.5
+    ,-0.25,-pi/3]; %lower value bounds
+C.ub = [0,1.25,pi/3]; %upper value bounds
 C.sb = [0.2,0.2,pi/3]; %search box absolute dimensions
 C.bias = zeros(1,size(ANG_cut,2)); %initial biases are zero
 
@@ -51,7 +52,7 @@ C.omit = [];
 
 %% MODE AND SETUP FOR BOTH OPTIMIZATIONS
 mode = 'line_3dof';     % 3 modes: 'line_3dof' , 'line_1dof', 'circular' (circular not yet implemented)
-file = 'Sept28_test3'; % file name
+file = 'Sept27_newmode'; % file name
 animate = 0;            % generate animation?
 
 %% RUN OPTIMIZATION #1
@@ -66,7 +67,7 @@ error = prot2error(prot,TRIAL1.ANG_bio,'sign','all');
 newmode = true;
 if newmode
     C.bias = -mean(error);
-    C.bias(1:end-1) = 0;
+    C.bias(2:end) = 0;
 else
     C.bias = -mean(error);
 end

@@ -11,6 +11,12 @@ function complete = optimization_animate(TRIAL)
     %       file: (str)name of 
     
     %% Initialize
+    %NEW: support for batch-trial files
+    trialselect = 1; %can be 1 or 2, depending on 1st or 2nd optimization
+    if isfield(TRIAL,'TRIAL')
+        TRIAL = TRIAL.TRIAL(trialselect);
+    end
+    
     %Unpack Trial
     traj = TRIAL.traj;
     bio_points = TRIAL.PTS_bio;

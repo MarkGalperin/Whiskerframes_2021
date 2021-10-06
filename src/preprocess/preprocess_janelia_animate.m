@@ -43,7 +43,7 @@ function complete = preprocess_janelia_animate(S,other,file)
     %% other setup
     wlen = 40;
     
-    
+
     %% Animation loop
     for t = 1:T
         
@@ -122,7 +122,7 @@ function complete = preprocess_janelia_animate(S,other,file)
             axis equal
             xlabel('x')
             ylabel('-y')
-            axis([x_lim2, y_lim2])
+%             axis([x_lim2, y_lim2])
             hold off
         
         %% SUBPLOT 3: optimization input

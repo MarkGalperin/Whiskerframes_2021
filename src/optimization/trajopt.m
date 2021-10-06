@@ -26,12 +26,12 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
     %initialize s
     s = C.s;
 
-    %upper and lower bounds
-    thmax = pi/3;
-    th_lb = -thmax;
-    th_ub = thmax;
-    x_lb = [-1,-0.25,th_lb];
-    x_ub = [0,1.25,th_ub];
+%     %upper and lower bounds
+%     thmax = pi/3;
+%     th_lb = -thmax;
+%     th_ub = thmax;
+%     x_lb = [-1,-0.25,th_lb];
+%     x_ub = [0,1.25,th_ub];
     
     %split open DATA
     PTS = DATA.points;
@@ -54,7 +54,9 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
     N = size(ANG,2);
     x_log = zeros(T,3);
     E_log = zeros(T,1);
+    overc = zeros(T,1); %9/24 - overconstraint log
     info_log = zeros(4,N,T);
+    resetflag = 0;
     
     %LOOP
     for t = 1:T
@@ -86,30 +88,38 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
                 %% perform optimization
                 %define function handles
                 objective = @(x) optimization_obj_line(x,s,bio_pts,bio_ang,C);
-                constraint = @(x) optimization_constraint2(x,xm,xmm,s,C);
+                constraint = @(x) optimization_constraint(x,xm,xmm,s,C);
                 
                 %get search box as function of previous state
                 SB_u = xm + (0.5)*C.sb;
                 SB_l = xm - (0.5)*C.sb;
                 
-                %evaluate theta limits (compatibility)
-                % THIS USES PREVIOUS STATE WHICH IS NOT FULLY CORRECT. (the
-                % alternative is a very complicated time-inefficient
-                % calculation) NOTE IF THIS CAUSES ANY ERRORS OR
-                % OVER-CONSTRAINT!
+                % Evaluate theta limits based on compat. 
+                % This uses previous state which is not totally correct, so
+                % a buffering term is added. This is ok because the
+                % constraint function should check again to make sure the
+                % limits are okay.
                 if C.thlim
-                    w1 = C.s*sin(xm(3));
-                    w2 = 1-C.s*cos(xm(3));
-                    th_lower = atan((w2-xm(2))/(w1-xm(1))) - pi/2;
-                    th_upper = atan(xm(2)/xm(1)) + pi/2;
+                    %set buffer
+                    buff = pi/20;
+                    %calculate theta limits
+                    th_lower = (0.5)*atan2(-2*xm(1)*xm(2)+2*xm(1),-xm(1)^2+xm(2)^2-2*xm(2)+1) - buff;
+                    th_upper = atan2(-xm(2),xm(1)) + buff;
+                    
+%                     %preventing weird arctan2 stuff
+%                     if th_lower >= th_upper
+%                         th_lower = th_lower - pi;
+%                     end
+                    
                     %assign to search frame
                     SB_l(3) = th_lower;
                     SB_u(3) = th_upper;
                 end
                 
-                if any(isnan(xm)) %first frame chooses from entire seach space
+                if any(isnan(xm)) || resetflag %first frame chooses from entire seach space
                     xlb = C.lb;
                     xub = C.ub;
+                    resetflag = 0;
                 else
                     %make sure nothing exceeds global bounds
                     for ii = 1:3
@@ -123,15 +133,52 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
                     %assign local search space
                     xlb = SB_l;
                     xub = SB_u;
+                    
+                    %OCT 5 FIX: if th_lower >= th_upper, subtract pi or go
+                    %to global lower bound. Upper bound is solid.
+                    if xlb(3) >= xub(3)
+                        %subtract pi
+                        xlb(3) = xlb(3) - pi;
+                        
+                        %check again
+                        if xlb(3) >= xub(3)
+                            xlb(3) = C.lb(3); 
+                        end
+                    end
+                    
                 end               
                 
 
                 %run brute-force optimizer
                 res = C.res; %resolution for r1,r2,th
                 [x, err] = opt3dof(objective,xlb,xub,res,constraint);
+                
+                %handle overconstraint
                 if isnan(x)
+                    %log overconstraint event and error
+                    overc(t,1) = 1;
+                    [err,~] = objective(xm);
+                    
+                    %set control frame to previous position
                     x = xm;
-                    err = E_log(t-1,1); %FIX THIS!! IT IS WRONG!!!!
+                    xm = xmm;
+                    
+                    % RESET CASE
+                    if t >= C.ovrct && sum(overc(1+t-C.ovrct:t)) == C.ovrct %if there have been C.ovrct events in the last C.ovrct time frames
+                        %RESET CONSTRAINTS
+                        fprintf('PERFORMING RESET \n')
+                        resetflag = 1; %this will trigger no constraints in the next loop
+%                         %RESET TIME?
+%                         timereset = false;
+%                         if timereset
+%                             t = 1+t-C.ovrct; %reset time to the first time overconstraint occurred
+%                         end
+                    end
+                    
+                else
+                    %possibly overwrite previous overconstraints in the
+                    %case that time was reset
+                    overc(t,1) = 0;
                 end
                 
                 %get info
@@ -193,7 +240,8 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
                    's',s,...
                    'PTS_bio',PTS,...
                    'ANG_bio',ANG,...
-                   'file',file);
+                   'file',file,...
+                   'overc',overc);
     
     %calcuate absolute error mean          
     info_derror = permute(info(3,:,:),[3 2 1]);

@@ -41,10 +41,11 @@ if RUN(4)
     nfiles = size(tbl,1);
 %     files = 1:4; % Aug 2016 (B row, 4 whiskers)
 %     files = 5:10; % Sep 2016 (B row, 3 whiskers)
-%     files = 11:16; % Mar 2017 (C row, 5 whiskers)
+    files = 11:16; % Mar 2017 (C row, 5 whiskers)
+%         files = 15; %9/28, just doing one
 %     files = 17:nfiles; % Feb 2018 (C row, 5 whiskers)
 %     files = 1:10; %Just B row
-    files = 1:nfiles; %all files
+%     files = 1:nfiles; %all files
 
     for ii = files
         %get paths
@@ -61,9 +62,10 @@ if RUN(4)
         MSR = LoadMeasurements(mpath);
 
         %% STEP 1: get data, interpolate gaps, exclude extras
-        interpolate = true;
+        fillnans = true;
         omitlast = tbl.omit_last(ii);
-        [ANG,PTS] = pp1_janelia(MSR,interpolate,omitlast);
+        extrasel = true;
+        [ANG,PTS] = pp1_janelia(MSR,fillnans,omitlast,extrasel);
 
         %plot whisker angles
         T = size(ANG,1);
@@ -108,7 +110,7 @@ if RUN(4)
         save(savefile,'-struct','S');
 
         %% make animation?
-        animate_janelia = false;
+        animate_janelia = true;
         if animate_janelia
             figure('Renderer', 'painters', 'Position', [10 10 1000 300])
                 complete = preprocess_janelia_animate(S,other,savename);
@@ -141,7 +143,7 @@ if RUN(5)
         
         %% perform filtering
         sfreq = 500; %500 fps video
-        freq = 50; %Hz
+        freq = 50; %Hz - frequency for mice
         ANG_f = bwfilt(ANG,sfreq,0,freq);
         
         %record and save
