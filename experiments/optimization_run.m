@@ -15,26 +15,24 @@ addpath('../src/deming');
 addpath('../src/optimization');
 
 %% Batch trial settings
-biasalg = true;             %run bias algorithm, which performs two optimizations
+biasalg = false;             %run bias algorithm, which performs two optimizations
 % RES = [0.05, 0.05, 0.005];  %Set Resolution (warning, this effects running time exponentially)
 RES = [0.02, 0.02, 0.002];  %Set Resolution (warning, this effects running time exponentially)
 
 %% DEFINE PARAMETERS
 %define a cell datatype with the three dynamic constraint modes
 dynamics = {struct('R',10,'accel',10,'dtheta',pi/2,'ddtheta',10),...    %mode 1: no constraint
-            struct('R',1,'accel',0.1,'dtheta',pi/2,'ddtheta',0.05),...  %mode 2: high vel constraint med accel constraint
-            struct('R',1,'accel',0.06,'dtheta',pi/2,'ddtheta',0.01)};   %mode 3: high vel constraint tight accel constraint
-% dynamics = {struct('R',1,'accel',0.06,'dtheta',pi/2,'ddtheta',0.01)};
-
+            struct('R',1,'accel',0.1,'dtheta',pi/2,'ddtheta',0.05),...  %mode 2: high vel constraint, accel constraint 1
+            struct('R',1,'accel',0.06,'dtheta',pi/2,'ddtheta',0.01)};   %mode 3: high vel constraint, accel constraint 2
 
 %put all values to loop over in cell arrays (WARNING currently only works for current multiple-value arrays)
-PARAMS = struct('s',{0.3,0.45,0.6,0.75,0.9},...
+PARAMS = struct('s',{0.6,0.75,0.9},...
                 'c',{0.1},...
                 'errmode',{'squared'},...
                 'res',{RES},...
                 'lb',{[-1 -0.2500 -1.0472]},...
                 'ub',{[0 1.2500 1.0472]},...
-                'sb',{[0.2000 0.2000 1.0472]},...
+                'sb',{[0.3000 0.3000 1.0472]},...
                 'bias',{'zeros'});
             
 % Call generate_runs
@@ -71,15 +69,15 @@ ALLX = {'skip',...   (#01 - Aug '16, B row, 4 whiskers)
         'skip',...   (#11 - Mar '17, C row, 5 whiskers)
         'skip',...   (#12 - Mar '17, C row, 5 whiskers)
         'skip',...   (#13 - Mar '17, C row, 5 whiskers)
-        'skip',...   (#14 - Mar '17, C row, 5 whiskers) - use
-        1:10,...    (#15 - Mar '17, C row, 5 whiskers) - use
-        1:10,...   (#16 - Mar '17, C row, 5 whiskers) - use
+        1:50,...   (#14 - Mar '17, C row, 5 whiskers) - use
+        1:50,...    (#15 - Mar '17, C row, 5 whiskers) - use
+        1:50,...   (#16 - Mar '17, C row, 5 whiskers) - use
         'skip',...   (#17 - Feb '18, C row, 5 whiskers)
-        1:10,...   (#18 - Feb '18, C row, 5 whiskers) - use
-        1:10,...    (#19 - Feb '18, C row, 5 whiskers) - use
+        'skip',...   (#18 - Feb '18, C row, 5 whiskers) - use
+        'skip',...    (#19 - Feb '18, C row, 5 whiskers) - use
         'skip',...   (#20 - Feb '18, C row, 5 whiskers)
         'skip',...   (#21 - Feb '18, C row, 5 whiskers)
-        1:10,...   (#22 - Feb '18, C row, 5 whiskers) - use
+        'skip',...   (#22 - Feb '18, C row, 5 whiskers) - use
         };
 skips = strcmp(ALLX,'skip');
 
@@ -126,13 +124,14 @@ for file_i = files(~skips) %file_i is the index to loop over
         dataset3 = 11:16;
         dataset4 = 17:22;
         
+        % CURRENTLY THIS DOES NOTHING BUT I DONT WANT TO DELETE IT
         %apply omits to point data. Omits should be a 1D array.
         if any(file_i==dataset1)
             C.omit = []; %no omits
         elseif any(file_i==dataset2)
             C.omit = []; %no omits
         elseif any(file_i==dataset3)
-            C.omit = [1]; %remove the 1st whisker, which is currently untracked!
+            C.omit = []; %no omits - previously had omit
         elseif any(file_i==dataset4)
             C.omit = []; %no omits
         end
@@ -157,12 +156,15 @@ for file_i = files(~skips) %file_i is the index to loop over
         %% Initialize trial struct and save location
         %initialize as dimensionless/empty, so TRIAL can be 1x1 or 2x1
         %depending on biasalg
-        TRIAL = struct('traj',{},'error',{},'info',{},'mode',{},'constraints',{},'s',{},'PTS_bio',{},'ANG_bio',{},'file',{},'abserrmean',{});
+        TRIAL = struct('traj',{},'error',{},'info',{},'mode',{},'constraints',{},'s',{},'PTS_bio',{},'ANG_bio',{},'file',{},'overc',{},'abserrmean',{});
         file_trial = append('../output/trial_data/bias/one/',file);
+        
+        %% last-minute defaults
+        C.ovrct = 3;
         
         %% RUN OPTIMIZATION #1
         fprintf('RUNNING OPTIMIZATION 1 \n');
-        TRIAL(1) = trajopt(DATA,mode,file,animate,C); %TRIAL contains trajectory, error, mode, constraints, and s
+        TRIAL(1) =  trajopt(DATA,mode,file,animate,C); %TRIAL contains trajectory, error, mode, constraints, and s
         
         %% RUN OPTIMIZATION #2
         if biasalg 

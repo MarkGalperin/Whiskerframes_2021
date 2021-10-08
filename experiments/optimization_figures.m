@@ -22,9 +22,9 @@ addpath('../src/figures');
 % loadstr = '../output/trial_data/post_filtered/restest8_filt.mat'; 
 % loadstr = '../output/trial_data/3dof_restest8.mat'; 
 % loadstr = '../output/trial_data/hjhjg_evenbias.mat'; 
-loadstr = '../output/trial_data/bias/two/Sept28_test2.mat'; 
+% loadstr = '../output/trial_data/bias/two/Sept28_test2.mat'; 
 % loadstr = '../output/trial_data/Sept24_reset_nocon3.mat'; 
-% loadstr = '../output/trial_data/D19_C001.mat';
+loadstr = '../output/trial_data/Oct7_Mar17.mat';
 
 %get trial (and filter for different output formats)
 TRIAL = load(loadstr);
@@ -57,7 +57,7 @@ multi = true;
 if multi
     %% file setup
     multidir = '../output/figures/multi/';
-    file = 'Sep28_test2';
+    file = 'Oct7';
     filepath = [multidir,file];
     %make directory
     mkdir(filepath)

@@ -14,14 +14,19 @@ accel = C.accel; %acceleration constraint
 dtheta = C.dtheta;
 ddtheta = C.ddtheta;
 
+%% pre-calculate
+w1 = C.s*sin(x(3));
+w2 = 1 - C.s*cos(x(3));
+rwcross = x(1)*w2-x(2)*w1;
+
 %% define constraints
 %check for NaN
 if any(isnan(xm))
     %compatability
     g1 = x(1) + c; %bottom edge away from face frame
     g2 = x(1) - s*sin(x(3)) + c; %top edge away from face frame
-    g3 = x(1)*cos(x(3)) + x(2)*sin(x(3)); %control frame not parallel to bottom whisker. MAY NEED TO ADJUST IF ATAN2 CAUSES PROBLEMS
-    g4 = 0.5*atan2(-2*x(1)*x(2)+2*x(1),-x(1)^2+x(2)^2-2*x(2)+1)-x(3); %control frame not parallel to top whisker.
+    g3 = -x(1)/rwcross + 1; %control frame not parallel to bottom whisker.
+    g4 = (w1-x(1))/rwcross + 1; %control frame not parallel to top whisker.
     
     %velocity constraints
     g5 = -1; %exempt
@@ -37,8 +42,8 @@ elseif any(isnan(xmm))
     %compatability constraints
     g1 = x(1) + c; %bottom edge away from face frame
     g2 = x(1) - s*sin(x(3)) + c; %top edge away from face frame
-    g3 = x(1)*cos(x(3)) + x(2)*sin(x(3)); %control frame not parallel to bottom whisker
-    g4 = 0.5*atan2(-2*x(1)*x(2)+2*x(1),-x(1)^2+x(2)^2-2*x(2)+1)-x(3); %control frame not parallel to top whisker. MAY NEED TO ADJUST IF ATAN2 CAUSES PROBLEMS
+    g3 = -x(1)/rwcross + 1; %control frame not parallel to bottom whisker.
+    g4 = (w1-x(1))/rwcross + 1; %control frame not parallel to top whisker.
 
     %velocity constraints
     g5 = norm(dx)-R; %dr within radius R
@@ -60,8 +65,8 @@ else
     %compatability
     g1 = x(1) + c; %bottom edge away from face frame
     g2 = x(1) - s*sin(x(3)) + c; %top edge away from face frame
-    g3 = x(1)*cos(x(3)) + x(2)*sin(x(3)); %control frame not parallel to bottom whisker. MAY NEED TO ADJUST IF ATAN2 CAUSES PROBLEMS
-    g4 = 0.5*atan2(-2*x(1)*x(2)+2*x(1),-x(1)^2+x(2)^2-2*x(2)+1)-x(3);
+    g3 = -x(1)/rwcross + 1; %control frame not parallel to bottom whisker.
+    g4 = (w1-x(1))/rwcross + 1; %control frame not parallel to top whisker.
     
     %velocity constraints 
     g5 = norm(dx)-R; %dr within radius R

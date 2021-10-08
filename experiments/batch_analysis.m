@@ -11,7 +11,7 @@ addpath('../src/optimization');
 
 %% LOAD DATA
 % choose batch directory
-batch_dir = '../output/trial_data/FULLBATCH/'; %make sure to end with "/"
+batch_dir = '../output/trial_data/BATCH/'; %make sure to end with "/"
 SETS = batch_load(batch_dir);
 
 %% MAKE RESULTS DIRECTORY
@@ -33,10 +33,18 @@ for set_i = 1:length(SETS)
     for trial_i = 1:length(set)
         trial = set(trial_i);
         
+        %determine whether this is a single optimization or double (bias
+        %algorithm) optimization
+        if length(trial) == 1
+            Nopt = 1;
+        else
+            Nopt = length(trial);
+        end
+        
         %construct table row as struct
         newrow = struct('Trial',trial_i,...
                         'O1_Error',trial.TRIAL(1).abserrmean,...
-                        'O2_Error',trial.TRIAL(2).abserrmean,...
+                        'O2_Error',trial.TRIAL(Nopt).abserrmean,...
                         's',trial.TRIAL(1).s,...
                         'dx',trial.TRIAL(1).constraints.R,...
                         'ddx',trial.TRIAL(1).constraints.accel,...
@@ -52,7 +60,7 @@ for set_i = 1:length(SETS)
         
         %% MAKE FIGURES FOR OPTS 1 AND 2
         file = 'full'; %figure batch directory name
-        for opt = 1:2
+        for opt = 1:Nopt
             %file setup
             filepath = [figures_dir,file,'/',trial.TRIAL(opt).file(2:3),'/',sprintf('OPT%d',opt)];
             %make directory
@@ -91,6 +99,8 @@ for set_i = 1:length(SETS)
             S.conf_error = {false,'-k'}; %mean error
             %error normalized?
             S.normalized = 0;
+            %show overconstraint events
+            S.overc = {true,'-r'};
 
             %range
             X = 1:size(prot,1); %1:500;

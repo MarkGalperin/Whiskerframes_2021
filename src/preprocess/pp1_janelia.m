@@ -1,4 +1,4 @@
-function [ANG,PTS] = pp1_janelia(MSR,fillnans,omitlast,extrasel)
+function [ANG,PTS] = pp1_janelia(MSR,fillnans,omitlast,extrasel,numfile)
 % *** Data Preprocess (STEP 1) - Janelia Data ***
 % This function does the first step of preprocessing (fetching data,
 % filling in all the gaps). Step 2 repositions and visualizes the data.
@@ -146,8 +146,23 @@ function [ANG,PTS] = pp1_janelia(MSR,fillnans,omitlast,extrasel)
             
         end
 
-    %remove and fill outliers
-    EXTRA_fill = filloutliers(EXTRA,'linear');
+    %remove and fill outliers manually (CURRENTLY ONLY FOR 14 AND 15. ADD MORE IF NEEDED)
+    EXTRA_fill = EXTRA;
+    if numfile == 14
+        out_i = 942;
+        %interpolate out a new value
+        EXTRA_fill(out_i,1) = (1/2)*(EXTRA_fill(out_i-1,1)+EXTRA_fill(out_i+1,1));
+        EXTRA_fill(out_i,2) = (1/2)*(EXTRA_fill(out_i-1,2)+EXTRA_fill(out_i+1,2));
+        EXTRA_fill(out_i,3) = (1/2)*(EXTRA_fill(out_i-1,3)+EXTRA_fill(out_i+1,3));
+    elseif numfile == 15
+        out_i = 1626;
+        %interpolate out a new value
+        EXTRA_fill(out_i,1) = (1/2)*(EXTRA_fill(out_i-1,1)+EXTRA_fill(out_i+1,1));
+        EXTRA_fill(out_i,2) = (1/2)*(EXTRA_fill(out_i-1,2)+EXTRA_fill(out_i+1,2));
+        EXTRA_fill(out_i,3) = (1/2)*(EXTRA_fill(out_i-1,3)+EXTRA_fill(out_i+1,3));
+    end
+    
+    %append extra row
     N = N+1; %increase N!
     ANG = [EXTRA_fill(:,1),ANG]; %recall, N has been iterated up
     X = [EXTRA_fill(:,2),X];
@@ -177,6 +192,122 @@ function [ANG,PTS] = pp1_janelia(MSR,fillnans,omitlast,extrasel)
     %assign x and y
     PTS(1,:,:) = permute(X,[3,2,1]);
     PTS(2,:,:) = permute(Y,[3,2,1]);
+    
+    %% process figures
+    procfig = false;
+    if procfig
+        %define X range
+        range = 1:T;
+        
+        %first: filter by length threshold
+        f1 = figure(1);
+            sgtitle('(1/4): filtered by length threshold')
+            subplot(3,1,1)
+                %plot angle
+                plot(EXTRA(range,1))
+                title('Angle')
+                xlabel('t')
+                ylabel('angle')
+                
+                
+            subplot(3,1,2)
+                %plot x
+                plot(EXTRA(range,2))
+                title('x')
+                xlabel('t')
+                ylabel('x')
+                
+                
+            subplot(3,1,3)
+                %plot y
+                plot(EXTRA(range,3))
+                title('y')
+                xlabel('t')
+                ylabel('y')
+                
+        
+        %second: remove outliers  
+        figure(2)
+            sgtitle('(2/4): outliers removed via filloutliers()')
+            subplot(3,1,1)
+                %plot angle
+                plot(EXTRA_fill(range,1))
+                title('Angle')
+                xlabel('t')
+                ylabel('angle')
+                
+                
+            subplot(3,1,2)
+                %plot x
+                plot(EXTRA_fill(range,2))
+                title('x')
+                xlabel('t')
+                ylabel('x')
+                
+                
+            subplot(3,1,3)
+                %plot y
+                plot(EXTRA_fill(range,3))
+                title('y')
+                xlabel('t')
+                ylabel('y')
+                
+        
+        %third: NaN removed
+        figure(3)
+            sgtitle('(3/4): NaNs removed')
+            subplot(3,1,1)
+                %plot angle
+                plot(ANG(range,1))
+                title('Angle')
+                xlabel('t')
+                ylabel('angle')
+                
+                
+            subplot(3,1,2)
+                %plot x
+                plot(X(range,1))
+                title('x')
+                xlabel('t')
+                ylabel('x')
+                
+            subplot(3,1,3)
+                %plot y
+                plot(Y(range,1))
+                title('y')
+                xlabel('t')
+                ylabel('y')
+         
+        figure(4)
+            sgtitle('(4/4): low-pass filter to 50 Hz')
+            sfreq = 500; %500 fps video
+            freq = 50; %Hz - frequency for mice
+            ANG_f = bwfilt(ANG(range,1),sfreq,0,freq);
+            X_f = bwfilt(X(range,1),sfreq,0,freq);
+            Y_f = bwfilt(Y(range,1),sfreq,0,freq);
+            
+            subplot(3,1,1)
+                %plot angle
+                plot(ANG_f)
+                title('Angle')
+                xlabel('t')
+                ylabel('angle')
+                
+                
+            subplot(3,1,2)
+                %plot x
+                plot(X_f)
+                title('x')
+                xlabel('t')
+                ylabel('x')
+                
+            subplot(3,1,3)
+                %plot y
+                plot(Y_f)
+                title('y')
+                xlabel('t')
+                ylabel('y')
+    end
     
     
 end

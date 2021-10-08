@@ -15,15 +15,19 @@ addpath('../src/circle_fit')
 run_staticframes = 0;
 run_deeplabcut = 0;
 run_luciesdata = 0;
-run_janelia = 1;
-run_biofilter = 1;
+run_janelia = 0;
+run_biofilter = 16;
 RUN = [run_staticframes,...
         run_deeplabcut,...
         run_luciesdata,...
         run_janelia,...
         run_biofilter]; %add as needed
 
- %% NEW DATA PREPROCESS (O'Connor Lab + Janelia whisker tracker)
+if sum(RUN) == 0
+    fprintf('nothing selected to run \n')
+end
+
+%% NEW DATA PREPROCESS (O'Connor Lab + Janelia whisker tracker)
 if RUN(4)
    %% Includes
     addpath('../src')
@@ -41,7 +45,9 @@ if RUN(4)
     nfiles = size(tbl,1);
 %     files = 1:4; % Aug 2016 (B row, 4 whiskers)
 %     files = 5:10; % Sep 2016 (B row, 3 whiskers)
-    files = 11:16; % Mar 2017 (C row, 5 whiskers)
+%     files = 11:16; % Mar 2017 (C row, 5 whiskers)
+%     files = 11:16; % Mar 2017 (C row, 5 whiskers)
+    files = 14:16; %useful set
 %         files = 15; %9/28, just doing one
 %     files = 17:nfiles; % Feb 2018 (C row, 5 whiskers)
 %     files = 1:10; %Just B row
@@ -64,12 +70,19 @@ if RUN(4)
         %% STEP 1: get data, interpolate gaps, exclude extras
         fillnans = true;
         omitlast = tbl.omit_last(ii);
-        extrasel = true;
-        [ANG,PTS] = pp1_janelia(MSR,fillnans,omitlast,extrasel);
-
-        %plot whisker angles
+        if 11<=ii && ii<=16
+            extrasel = true; %identify one more whisker for March 2017 data
+        else
+            extrasel = false;
+        end
+        
+        %run preprocess step 1
+        [ANG,PTS] = pp1_janelia(MSR,fillnans,omitlast,extrasel,ii);
+        %get size info
         T = size(ANG,1);
         N = size(ANG,2);
+        
+        %plot whisker angles
         plotangles = true;
         if plotangles
             figure('Renderer', 'painters', 'Position', [10 10 1500 300])
@@ -110,7 +123,7 @@ if RUN(4)
         save(savefile,'-struct','S');
 
         %% make animation?
-        animate_janelia = true;
+        animate_janelia = 0;
         if animate_janelia
             figure('Renderer', 'painters', 'Position', [10 10 1000 300])
                 complete = preprocess_janelia_animate(S,other,savename);
@@ -152,12 +165,25 @@ if RUN(5)
         savefile = ['../data/processed/filtered/filt_',filenames{ii}];
         save(savefile,'-struct','DATA_f');
         
+        %plot filtered angles
+        plotangles_f = 0;
+        if plotangles_f
+            figure('Renderer', 'painters', 'Position', [10 10 1500 300])
+                plot(1:T,ANG_f');
+                xlabel('time')
+                ylabel('whisker angle')
+                titlestr = sprintf('Run #%d. N = %d',ii,size(ANG_f,2));
+                title(titlestr);
+            %save plot 
+            saveas(gcf, savefile, 'png');
+        end
+        
         %complete
         fprintf('Filtered %s \n',filenames{ii})
         
     end
     %complete
-    fprintf('DONE FILTERING')
+    fprintf('DONE FILTERING \n')
     
 
 %end biofilter

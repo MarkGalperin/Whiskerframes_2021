@@ -99,22 +99,17 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
                 % a buffering term is added. This is ok because the
                 % constraint function should check again to make sure the
                 % limits are okay.
-                if C.thlim
-                    %set buffer
-                    buff = pi/20;
-                    %calculate theta limits
-                    th_lower = (0.5)*atan2(-2*xm(1)*xm(2)+2*xm(1),-xm(1)^2+xm(2)^2-2*xm(2)+1) - buff;
-                    th_upper = atan2(-xm(2),xm(1)) + buff;
-                    
-%                     %preventing weird arctan2 stuff
-%                     if th_lower >= th_upper
-%                         th_lower = th_lower - pi;
-%                     end
-                    
-                    %assign to search frame
-                    SB_l(3) = th_lower;
-                    SB_u(3) = th_upper;
-                end
+%                 if C.thlim
+%                     %set buffer
+%                     buff = pi/20;
+%                     %calculate theta limits
+%                     th_lower = 1 - buff;
+%                     th_upper = atan2(-xm(2),xm(1)) + buff;
+%                     
+%                     %assign to search frame
+%                     SB_l(3) = th_lower;
+%                     SB_u(3) = th_upper;
+%                 end
                 
                 if any(isnan(xm)) || resetflag %first frame chooses from entire seach space
                     xlb = C.lb;
