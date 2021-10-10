@@ -16,10 +16,12 @@ addpath('../src/circle_fit')
 
 %% Which post-processes are we running?
 % true = perform this pre-process and write files. false = don't
-run_animate = 1;
+run_animate = 0;
 run_filter = 0;
+run_batchfilter = 1;
 RUN = [run_animate,...
-       run_filter]; %add as needed
+       run_filter,...
+       run_batchfilter]; %add as needed
     
 %% ANIMATE TRAJECTORIES
 %
@@ -43,14 +45,14 @@ if RUN(2)
     %get trial data
     loadstr = '../output/trial_data/Oct7_Mar17.mat'; 
     fileout = 'Oct7_postfilt';
-    TRIAL_0 = load(loadstr);
-    PTS = TRIAL_0.PTS_bio;
-    ANG = TRIAL_0.ANG_bio;
+    Tstruct = load(loadstr);
+    PTS = Tstruct.PTS_bio;
+    ANG = Tstruct.ANG_bio;
     ypts = PTS(2,:,1); %assuming these are constant (MSE data)
     
     % get trajectory info
-    traj = TRIAL_0.traj; %[T,N]
-    prot = traj2prot(traj,TRIAL_0.s,ypts); %prot is [T,N]
+    traj = Tstruct.traj; %[T,N]
+    prot = traj2prot(traj,Tstruct.s,ypts); %prot is [T,N]
     
     %apply low-pass bwfilt to the trajectory
     sfreq = 500; %500 fps video
@@ -58,13 +60,13 @@ if RUN(2)
     traj_f = bwfilt(traj,sfreq,0,freq);
     
     %get new protractions
-    prot_f = traj2prot(traj_f,TRIAL_0.s,ypts); %prot is [T,N]
+    prot_f = traj2prot(traj_f,Tstruct.s,ypts); %prot is [T,N]
     
     %calculate error
     error_f = prot2error(prot_f,ANG,'abs','sum');
     
     %re-package TRIAL as TRIAL_f
-    TRIAL_f = TRIAL_0;
+    TRIAL_f = Tstruct;
     TRIAL_f.traj = traj_f;
     TRIAL_f.error = error_f;
     
@@ -72,6 +74,76 @@ if RUN(2)
     file_trial = append('../output/trial_data/post_filtered/',fileout);
     save(file_trial,'-struct','TRIAL_f');
 
+end
+
+if RUN(3)
+    
+    %% LOAD DATA
+    % choose batch directory
+    batch_dir = '../output/trial_data/BATCH_Oct9/'; %make sure to end with "/"
+    SETS = batch_load(batch_dir);
+    
+    %% LOOP OVER DATA TO FILTER
+    for set_i = 1:length(SETS)
+        %get set and loop over trials
+        set = SETS{set_i};
+        
+        %make output directory
+        filepath = [batch_dir(1:end-1),'_filt/BatchSet_',set(1).TRIAL(1).file(2:3),'/'];
+        mkdir(filepath)
+        
+        for trial_i = 1:length(set)
+            trial = set(trial_i);
+            
+            %determine whether this is a single optimization or double (bias
+            %algorithm) optimization
+            if length(trial) == 1
+                Nopt = 1;
+            else
+                Nopt = length(trial);
+            end
+            
+
+            %% loop over optimizations
+            for opt = 1:Nopt
+                
+                %call TRIAL struct and get info
+                Tstruct = trial.TRIAL(opt);
+                PTS = Tstruct.PTS_bio;
+                ANG = Tstruct.ANG_bio;
+                ypts = PTS(2,:,1); %assuming these are constant (MSE data)
+
+                % get trajectory info
+                traj = Tstruct.traj; %[T,N]
+                prot = traj2prot(traj,Tstruct.s,ypts); %prot is [T,N]
+
+                %apply low-pass bwfilt to the trajectory
+                sfreq = 500; %500 fps video
+                freq = 50; %Hz
+                traj_f = bwfilt(traj,sfreq,0,freq);
+
+                %get new protractions
+                prot_f = traj2prot(traj_f,Tstruct.s,ypts); %prot is [T,N]
+
+                %calculate error
+                error_f = prot2error(prot_f,ANG,'abs','sum');
+
+                %re-package TRIAL as TRIAL_f
+                TRIAL_f = Tstruct;
+                TRIAL_f.traj = traj_f;
+                TRIAL_f.error = error_f;
+
+                %package into new multi-dim struct
+                TRIAL_out(Nopt).TRIAL = TRIAL_f;
+                
+            end
+            %save TRIAL_f 
+            file_trial = [filepath,Tstruct.file];
+            save(file_trial,'-struct','TRIAL_out');
+        end
+
+    end
+    fprintf('DONE FILTERING \n')
 end
 
 

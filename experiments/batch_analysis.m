@@ -11,7 +11,7 @@ addpath('../src/optimization');
 
 %% LOAD DATA
 % choose batch directory
-batch_dir = '../output/trial_data/BATCH/'; %make sure to end with "/"
+batch_dir = '../output/trial_data/BATCH_Oct9_filt/'; %make sure to end with "/"
 SETS = batch_load(batch_dir);
 
 %% MAKE RESULTS DIRECTORY
@@ -59,7 +59,7 @@ for set_i = 1:length(SETS)
         set_tbl = [set_tbl;struct2table(newrow)];
         
         %% MAKE FIGURES FOR OPTS 1 AND 2
-        file = 'full'; %figure batch directory name
+        file = '500_Oct9_filt'; %figure batch directory name
         for opt = 1:Nopt
             %file setup
             filepath = [figures_dir,file,'/',trial.TRIAL(opt).file(2:3),'/',sprintf('OPT%d',opt)];
@@ -103,7 +103,7 @@ for set_i = 1:length(SETS)
             S.overc = {true,'-r'};
 
             %range
-            X = 1:size(prot,1); %1:500;
+            X = 1:500; %1:size(prot,1); 
 
             %Generate plot
             conf_plots = plot_config(S,TRIAL,X,prot);

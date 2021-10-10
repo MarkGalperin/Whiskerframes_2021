@@ -135,7 +135,7 @@ function Fig = plot_config(S,TRIAL,X,prot)
         %plot overconstraint events
         if S.overc{1}
             if isfield(TRIAL,'overc')
-                events = find(TRIAL.overc);
+                events = find(TRIAL.overc(X));
                 if ~isempty(events)
                     for linx = events
                         top = pi/2;
