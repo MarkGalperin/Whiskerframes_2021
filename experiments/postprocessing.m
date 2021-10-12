@@ -76,11 +76,12 @@ if RUN(2)
 
 end
 
+%% APPLY FILTERING TO ENTIRE BATCH RUN
 if RUN(3)
     
     %% LOAD DATA
     % choose batch directory
-    batch_dir = '../output/trial_data/BATCH_Oct9/'; %make sure to end with "/"
+    batch_dir = '../output/trial_data/BATCH_Oct10/'; %make sure to end with "/"
     SETS = batch_load(batch_dir);
     
     %% LOOP OVER DATA TO FILTER
@@ -115,23 +116,30 @@ if RUN(3)
 
                 % get trajectory info
                 traj = Tstruct.traj; %[T,N]
-                prot = traj2prot(traj,Tstruct.s,ypts); %prot is [T,N]
+%                 prot = traj2prot(traj,Tstruct.s,ypts); %prot is [T,N]
 
                 %apply low-pass bwfilt to the trajectory
                 sfreq = 500; %500 fps video
                 freq = 50; %Hz
                 traj_f = bwfilt(traj,sfreq,0,freq);
 
-                %get new protractions
-                prot_f = traj2prot(traj_f,Tstruct.s,ypts); %prot is [T,N]
-
-                %calculate error
-                error_f = prot2error(prot_f,ANG,'abs','sum');
-
-                %re-package TRIAL as TRIAL_f
+                %update struct
                 TRIAL_f = Tstruct;
-                TRIAL_f.traj = traj_f;
+                TRIAL_f.traj = traj_f; %put in filtered
+                TRIAL_f.info = 0; %erase info
+
+                %get info
+                info = struct2info(TRIAL_f);
+                TRIAL_f.info = info;
+                
+                %unpack info and re-calculate error
+                prot_f = permute(info(1,:,:),[3 2 1]);
+                derror_f = permute(info(3,:,:),[3 2 1]);
+                error_f = permute(info(4,:,:),[3 2 1]);
+
+                %update errors
                 TRIAL_f.error = error_f;
+                TRIAL_f.abserrmean =  mean(abs(derror_f));
 
                 %package into new multi-dim struct
                 TRIAL_out(Nopt).TRIAL = TRIAL_f;

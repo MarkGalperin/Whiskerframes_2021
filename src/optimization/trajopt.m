@@ -10,8 +10,7 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
 %   mode: [str] mode: 'line_1dof' or 'line_3dof' or 'debug'
 %   file: [str] filename
 %   animate: [bool] Generate animation
-%   C: [struct] Constraint  and setting struct
-%   bias: [1xN] - constant biases to apply
+%   C: [struct] Constraint and setting struct
 %
 % Returns...
 %   TRIAL: [struct] with all the relevant trial data in it. Both inputs and

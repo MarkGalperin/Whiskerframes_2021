@@ -5,7 +5,7 @@ function err = prot2error(prot,ANG,mode,returns)
 %     
 %     Takes prot: [TxN] array of whisker protractions (radians), generated
 %                   using the function traj2prot 
-%           mode: 'abs' or 'sqared' to calculate absolute value error or
+%           mode: 'abs' or 'squared' to calculate absolute value error or
 %                   squared error
 %           returns: 'all','sum',or 'avg' to return a (TxN) of individual
 %                   errors, a (Tx1) array of mean errors with respect to
