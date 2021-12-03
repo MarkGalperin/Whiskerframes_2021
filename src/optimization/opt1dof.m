@@ -16,9 +16,6 @@ function [opt, fval, graph] = opt1dof(obj,bounds,res,con)
         X = [X,bounds(2)];
     end
 
-    %% debug
-    g = '123';
-
     %% loop
     %initialize big values for function
     func = ones(size(X))*Inf;
@@ -29,23 +26,30 @@ function [opt, fval, graph] = opt1dof(obj,bounds,res,con)
         %flurp
         x = X(ii);
 
-%         %check constraints
-%         if any(con(x)>0)
-%             fails = g(con(x)>0);
-%             for jj = 1:length(fails)
-% %                 fprintf('did not meet constraint %c at x = %f \n',fails(jj),x);
-%             end
-%             continue %go to next loop if constraint fails
-%         end
-
-        %evaluate function
-        func(ii) = obj(x);
+        %check constraints
+        if any(con(x)>0)
+            %fails constraint test
+            func(ii) = Inf;
+        else
+            %evaluate function
+            [E,~] = obj(x);
+            func(ii) = E;
+        end
     end
 
-    %% find the minimum
-    [fval,ind] = min(func);
-%     fprintf('ind is,%f \n',ind);
-    opt = X(ind);
+    %% check for no minimum
+    if all(isinf(func))
+        %display overconstraint
+        fprintf('OVER-CONSTRAINED \n');
+        %send NaN to function to signal stay at the same position
+        fval = NaN;
+        opt = NaN;
+    else
+        %find the minimum and its location
+        [fval,ind] = min(func);
+        opt = X(ind);
+    end
+    
     debug = 'here';
     
     %% output stuff to graph (debug)

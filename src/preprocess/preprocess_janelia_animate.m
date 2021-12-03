@@ -9,16 +9,18 @@ function complete = preprocess_janelia_animate(S,other,file)
     %           
     %
     %% Open struct
-    ANG1 = S.msrangles;
-    PTS1 = S.msrpoints;
+    ANG = S.msrangles;
+    PTS = S.msrpoints;
     ANG2 = S.pp2angles;
     PTS2 = S.pp2points;
     PTS3 = S.points;
     ANG3 = S.angles;
+    WID = S.wid;
+    WSK = S.WSK;
     
     %% Initialize time points
-    N = size(ANG1,2); %number of whiskers
-    T = size(PTS1,3); %number of time frames
+    N = size(ANG,2); %number of whiskers
+    T = size(PTS,3); %number of time frames
     
     %initialize movie file
     path = append('../data/processed/janelia/animation/',file);
@@ -27,14 +29,10 @@ function complete = preprocess_janelia_animate(S,other,file)
     open(v);
     
     %average values for base whisker 
-    xavg1 = mean(PTS1(1,1,:));
-    yavg1 = mean(PTS1(2,1,:));
     xavg2 = mean(PTS2(1,1,:));
     yavg2 = mean(PTS2(2,1,:));
     
     %% initialize plot parameters
-    x_lim1 = [xavg1-100 xavg1+300];
-    y_lim1 = [yavg1-200 yavg1+200];
     x_lim2 = [xavg2-100 xavg2+300];
     y_lim2 = [yavg2-200 yavg2+200];
     x_lim3 = [-1 1];
@@ -48,8 +46,6 @@ function complete = preprocess_janelia_animate(S,other,file)
     for t = 1:T
         
         %index the input pts
-        x_base1 = PTS1(1,:,t);
-        y_base1 = PTS1(2,:,t);
         x_base2 = PTS2(1,:,t);
         y_base2 = PTS2(2,:,t);
         x_base3 = PTS3(1,:,t);
@@ -61,34 +57,72 @@ function complete = preprocess_janelia_animate(S,other,file)
         %clear the figure
         clf
         
+        %% initialize layout
+        ha = tight_subplot(1,3,[.06 .06],[.1 .2],[.07 .07]);
+        hold on
+        
         %% subplot 1: Raw data (step 1)
-        subplot(1,3,1)
+        axes(ha(1))
             hold on
-            for n=1:N
-                %get tip coords
-                x_tip = x_base1(n) + wlen*cosd(ANG1(t,n));
-                y_tip = y_base1(n) + wlen*sind(ANG1(t,n));
+            %format plot
+            xlim([0 640]);
+            ylim([-480 0]);
+            %overlay video file
+            if S.whiskvid{1}
+                %get vid file
+                vid = S.whiskvid{2};
+                %get the current video image and plot with imshow
+                I =read(vid,t);
+                %flip image over y axis
+                I = flip(I,1);
 
-                %plot whisker line
-                plot([x_tip,x_base1(n)],[y_tip,y_base1(n)],'-m','LineWidth',2);
-                
-                %plot base
-                plot(x_base1(n),y_base1(n),'o','MarkerEdgeColor','black','MarkerFaceColor','white');
-                %plot tip
-%                 plot(x_tip,y_tip,'o','MarkerEdgeColor','black','MarkerFaceColor','green');
-                
+                %plot image
+                image(0,-480,I);
             end
 
+            %plot whiskers
+            for n = 1:N
+                %plot whisker
+                wid = WID(t,n)+1;
+                if ~isnan(wid)
+                    wpts = WSK.WSK_points{t,wid};
+                    plot(wpts(1,:),-wpts(2,:),'LineWidth',2);
+                end
+                %plot point
+                plot(PTS(1,n,t),-PTS(2,n,t), 'ok','MarkerFaceColor','w');
+                
+                %plot labels
+                if isfield(S,'labels') && S.labels
+                    %plot a numbered label
+                    textstr = sprintf('(%d)',n);
+                    text(PTS(1,n,t),...
+                        -PTS(2,n,t)-20,...
+                        textstr,...
+                        'Color','white');
+                end
+            end
+
+            axis equal
+            axis tight
+            ha(3).PositionConstraint = 'outerposition';
+
+            %plot time
+            timestr = sprintf('t = %4d/%d',t,T);
+            text(500,...
+                -30,...
+                timestr,...
+                'Color','black',...
+                'BackgroundColor', 'white');
+  
             % format plot
             title('Raw video data points')
-            axis equal
             xlabel('x')
             ylabel('y')
-            axis([x_lim1, y_lim1])
+            
             hold off
         
         %% subplot 2: Normalized (step 2)
-        subplot(1,3,2)
+        axes(ha(2))
             hold on
             for n=1:N
                 
@@ -126,7 +160,7 @@ function complete = preprocess_janelia_animate(S,other,file)
             hold off
         
         %% SUBPLOT 3: optimization input
-        subplot(1,3,3)
+        axes(ha(3))
             hold on
             
             m = 0.25;

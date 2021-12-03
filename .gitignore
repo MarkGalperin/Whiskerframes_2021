@@ -2,3 +2,5 @@ output
 tests
 data/janelia
 data/processed/janelia/animation
+**/onedrive_defects
+**/_old

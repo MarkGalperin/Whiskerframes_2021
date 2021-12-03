@@ -14,14 +14,16 @@ function complete = optimization_animate(TRIAL)
     %NEW: support for batch-trial files
     trialselect = 1; %can be 1 or 2, depending on 1st or 2nd optimization
     if isfield(TRIAL,'TRIAL')
+        filetemp = TRIAL.file;
         TRIAL = TRIAL.TRIAL(trialselect);
+        TRIAL.file = filetemp;
     end
     
     %Unpack Trial
     traj = TRIAL.traj;
     bio_points = TRIAL.PTS_bio;
     bio_angles = TRIAL.ANG_bio;
-    error = TRIAL.error;
+    error = abs(mean(permute(TRIAL.info(3,:,:),[3 2 1]),2))*(180/pi);
     s = TRIAL.s;
     mode = TRIAL.mode;
     file = TRIAL.file;
@@ -29,6 +31,9 @@ function complete = optimization_animate(TRIAL)
     %Initialize animation
     T = size(traj,1);
     N = size(bio_points,2);
+    
+    %get number of digits of T 
+    Tdig = floor(log10(T)) + 1;
     
     %initialize movie file
     path = append('../output/movies/optimization/',file);
@@ -130,9 +135,14 @@ function complete = optimization_animate(TRIAL)
         end
         
         
-        %% annotate error
-        err = sprintf('mean error = %f rad',error(t));
-        text(-0.25,-0.25,err)
+        %% annotate error and frame number
+        %frame
+        framenum = sprintf(['frame %.',num2str(Tdig),'d/%d'],t,T);
+        text(-0.25,-0.25,framenum)
+        
+        %error
+        err = sprintf('mean error = %.3f deg',error(t));
+        text(-0.25,-0.4,err)
         
         hold off
 

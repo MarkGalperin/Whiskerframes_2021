@@ -24,11 +24,13 @@ addpath('../src/figures');
 % loadstr = '../output/trial_data/hjhjg_evenbias.mat'; 
 % loadstr = '../output/trial_data/bias/two/Sept28_test2.mat'; 
 % loadstr = '../output/trial_data/Sept24_reset_nocon3.mat'; 
-loadstr = '../output/trial_data/Oct7_Mar17.mat';
+% loadstr = '../output/trial_data/Oct7_Mar17.mat';
+loadstr = '../output/trial_data/BATCH_Oct16/BatchSet_15/D15_C003.mat';
+% loadstr = '../output/trial_data/BATCH_oct16_filt/BatchSet_16/D16_C001.mat';
 
 %get trial (and filter for different output formats)
 TRIAL = load(loadstr);
-if isfield(TRIAL,'TRIAL') 
+while isfield(TRIAL,'TRIAL') 
     trialselect = 1; %1 or 2 to do regular or bias
     TRIAL = TRIAL.TRIAL(trialselect);
 end
@@ -48,8 +50,8 @@ if isfield(TRIAL,'info')
     info_derror = permute(info(3,:,:),[3 2 1]);
     error = permute(info(4,:,:),[3 2 1]);
 else
-    %calculate error (CURRENTLY THIS DOESNT WORK RIGHT)
-    error = prot2error(prot,ANG,'abs','sum');
+%     %calculate error (CURRENTLY THIS DOESNT WORK RIGHT)
+%     error = prot2error(prot,ANG,'abs','sum');
 end
 
 %% Multi-plot
@@ -57,16 +59,16 @@ multi = true;
 if multi
     %% file setup
     multidir = '../output/figures/multi/';
-    file = 'Oct7';
+    file = 'Oct18_pinv';
     filepath = [multidir,file];
     %make directory
     mkdir(filepath)
     
     %% configuration plot
     %PLOT SETTINGS IN STRUCT S
-    S.conf_r1r2 = {true,'-r','-m','-b'}; % r1,r2 configuration
+    S.conf_r1r2 = {false,'-r','-m','-b'}; % r1,r2 configuration
     S.conf_p1p2 = {false,'-r','-m','-b'}; % w basis configuration
-    S.conf_p1invp2 = {false,'-r','-m','-b'}; % w basis configuration with 1/p1
+    S.conf_p1invp2 = {true,'-r','-m','-b'}; % w basis configuration with 1/p1
     S.conf_v1v2 = {false}; % trajectory velocity
     S.conf_a1a2 = {false}; % trajectory acceleration
     S.conf_biomeanp = {false,'-k'};% mean protraction (biological)
@@ -82,7 +84,7 @@ if multi
     S.overc = {true,'-r'};
     
     %range
-    X = 1:size(prot,1);
+    X = 1:500;%1:size(prot,1);
      
     % Generate plot
     conf_plots = plot_config(S,TRIAL,X,prot);
@@ -99,7 +101,7 @@ if multi
     if ~isfield(TRIAL,'overc')
         TRIAL.overc = NaN;
     end
-    comp_plots = plot_whiskercomp(X,N,ANG,info_prot,error,TRIAL.overc);
+    comp_plots = plot_whiskercomp(X,N,ANG,info_prot,abs(info_derror),TRIAL.overc);
     
     %save plot
     comp_file = [file,'_comp']; 
@@ -109,7 +111,7 @@ if multi
 
     %% error
     %generate plot
-    err_plot = plot_error2(X,error,'-r');
+    err_plot = plot_error2(X,abs(info_derror),'-r');
     %save plot
     err_file = [file,'_err']; 
     err_path = filepath; 

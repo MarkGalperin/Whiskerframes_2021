@@ -1,14 +1,21 @@
-function Fig = plot_config(S,TRIAL,X,prot)
+function Fig = plot_config(S,TRIAL,X)
 % *** WHISKER CONFIGURATION TRAJECTORIES ***
-% This function is a wrapper for plot_shadededcomp() to produce the output
-% plot for N whiskers
+% This function plots biological and mechanical values over time
 
     %% setup
     LGD = {};
     traj = TRIAL.traj;
+    prot = TRIAL.prot;
+    
+    % sum and cut error
+    error = abs(permute(TRIAL.info(3,:,:),[3 2 1]));
+    err_sum = mean(error,2);
+    err_cut = err_sum(X);
+    err_plot = err_cut*(180/pi); %convert to degrees here
+    err_run = err_sum*(180/pi); %convert to degrees here
     
     %% plots
-    figure('Renderer', 'painters', 'Position', [10 10 900 600])
+    Fig = figure('visible','off','Renderer', 'painters', 'Position', [10 10 900 600]);
         hold on
         
         %plot the configuration over the time range
@@ -123,12 +130,11 @@ function Fig = plot_config(S,TRIAL,X,prot)
             LGD = [LGD,'mean mech. angle'];
         end
         %plot error over time
-        err = TRIAL.error(X);
         if S.conf_error{1}
             if normalized
-                err = normalize(err);
+                err_plot = normalize(err_plot);
             end
-            plot(X,err,'LineWidth',1)
+            plot(X,err_plot,'LineWidth',1)
             %append to legend
             LGD = [LGD,'mean error'];
         end
@@ -138,9 +144,8 @@ function Fig = plot_config(S,TRIAL,X,prot)
                 events = find(TRIAL.overc(X));
                 if ~isempty(events)
                     for linx = events
-                        top = pi/2;
-                        bottom = -pi/2;
-                        plot([linx,linx],[top,bottom],S.overc{2})
+                        %plot vertical line at overconstraint event
+                        xline(linx,S.overc{2})
                     end
                 end
             end
@@ -157,9 +162,9 @@ function Fig = plot_config(S,TRIAL,X,prot)
         xlabel('time frame');
         legend(LGD,'Location','northeastoutside');
         title(conf_title);
-        subtitle(sprintf('average trial error = %f deg',mean(err)*(180/pi)));%show mean error in subtitle
+        subtitle(sprintf('average trial error = %f deg (run), %f deg (plot)',mean(err_run),mean(err_plot)));%show mean error in subtitle
     %% return figure
-    Fig = gcf;
+%     Fig = gcf;
         
 end
 

@@ -21,11 +21,13 @@ RES = [0.02, 0.02, 0.002];  %Set Resolution (warning, this effects running time 
 
 %% DEFINE PARAMETERS
 %define a cell datatype with the three dynamic constraint modes
-dynamics = {struct('R',0.2,'accel',0.20,'dtheta',pi/6,'ddtheta',0.050),...      %mode 1: 
-            struct('R',0.2,'accel',0.15,'dtheta',pi/6,'ddtheta',0.030),...      %mode 2: 
-            struct('R',0.2,'accel',0.10,'dtheta',pi/6,'ddtheta',0.015),...      %mode 3:
-            struct('R',0.2,'accel',0.06,'dtheta',pi/6,'ddtheta',0.008),...      %mode 4: 
-            struct('R',0.2,'accel',0.10,'dtheta',pi/6,'ddtheta',0.008))};       %mode 5:
+dynamics = {struct('R',0.2,'accel',0.2,'dtheta',pi/6,'ddtheta',0.050)}; % Oct15
+        
+% dynamics = {struct('R',0.2,'accel',0.20,'dtheta',pi/6,'ddtheta',0.050),...      %mode 1: 
+%             struct('R',0.2,'accel',0.15,'dtheta',pi/6,'ddtheta',0.030),...      %mode 2: 
+%             struct('R',0.2,'accel',0.10,'dtheta',pi/6,'ddtheta',0.015),...      %mode 3:
+%             struct('R',0.2,'accel',0.06,'dtheta',pi/6,'ddtheta',0.008),...      %mode 4: 
+%             struct('R',0.2,'accel',0.10,'dtheta',pi/6,'ddtheta',0.008)};       %mode 5:
 
 
 %put all values to loop over in cell arrays (WARNING currently only works for current multiple-value arrays)

@@ -3,7 +3,6 @@ function Fig = plot_shadedcomp(X,Y1,Y2,w)
 % Summary of this function goes here
 %   Detailed explanation goes here
 
-
     %% get transition booleans
     dif = Y2>Y1;
     sz = size(dif,2);
@@ -31,7 +30,7 @@ function Fig = plot_shadedcomp(X,Y1,Y2,w)
     
     %% Plot
     hold on
-    
+
     %2 loops for each fill
     for ii = 1:size(Xb0,1)
         %get polygon data
@@ -51,12 +50,12 @@ function Fig = plot_shadedcomp(X,Y1,Y2,w)
         %plot
         fill(X2, inBetween,'r','LineStyle','none','FaceAlpha',0.25);
     end
-    
+
     %get two curves
     width = 1;
     plot(X,Y1,'k','LineWidth',width)
     plot(X,Y2,'r','LineWidth',width)
-    
+
     %% format plot
     ystr = sprintf('Θ%d',w);
     ylabel(ystr);
@@ -64,6 +63,6 @@ function Fig = plot_shadedcomp(X,Y1,Y2,w)
     
 %     ylim([-pi/2,pi/2])
     
-    %% return figure
-    Fig = gcf;
+    %% return something so MATLAB stops being a baby
+    Fig = 0;
 end

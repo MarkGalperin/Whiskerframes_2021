@@ -16,9 +16,9 @@ addpath('../src/circle_fit')
 
 %% Which post-processes are we running?
 % true = perform this pre-process and write files. false = don't
-run_animate = 0;
+run_animate = 1;
 run_filter = 0;
-run_batchfilter = 1;
+run_batchfilter = 0;
 RUN = [run_animate,...
        run_filter,...
        run_batchfilter]; %add as needed
@@ -28,14 +28,16 @@ RUN = [run_animate,...
 if RUN(1)
 %     loadstr = '../output/trial_data/Oct7_Mar17.mat';  
 %     loadstr = '../output/trial_data/3dof_restest8.mat'; 
-    loadstr = '../output/trial_data/post_filtered/Oct7_postfilt.mat'; 
+%     loadstr = '../output/trial_data/post_filtered/Oct7_postfilt.mat'; 
 %     loadstr = '../output/trial_data/bias/one/test1.mat'; 
 %     loadstr = '../output/trial_data/bias/two/Sept28_test2.mat'; 
-%     loadstr = '../output/trial_data/FULLBATCH/BatchSet_15/D15_C010.mat';    
+%     loadstr = '../output/trial_data/BATCH_Oct19/BatchSet_15/D15_C001.mat';    
+%     loadstr = '../output/trial_data/BATCH_1dof_Nov27/BatchSet_15/D15_C007.mat';
+    loadstr = '../output/trial_data/BATCH_3dof_Nov23/BatchSet_14/D14_C008.mat';
 %     loadstr = '../output/trial_data/Sept24_reset_nocon3.mat';
 
     TRIAL = load(loadstr);
-    TRIAL.file = 'Oct7_postfilt';
+    TRIAL.file = 'Nov23_3dof_C8';
     % Generate Animation
     complete = optimization_animate(TRIAL); %automatically saves to output/movies/optimization/
 end
@@ -81,7 +83,7 @@ if RUN(3)
     
     %% LOAD DATA
     % choose batch directory
-    batch_dir = '../output/trial_data/BATCH_Oct10/'; %make sure to end with "/"
+    batch_dir = '../output/trial_data/BATCH_oct16/'; %make sure to end with "/"
     SETS = batch_load(batch_dir);
     
     %% LOOP OVER DATA TO FILTER

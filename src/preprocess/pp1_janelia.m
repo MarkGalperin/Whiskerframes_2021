@@ -1,314 +1,172 @@
-function [ANG,PTS] = pp1_janelia(MSR,fillnans,omitlast,extrasel,numfile)
+function [ANG,PTS,WID] = pp1_janelia(MSR)
 % *** Data Preprocess (STEP 1) - Janelia Data ***
 % This function does the first step of preprocessing (fetching data,
 % filling in all the gaps). Step 2 repositions and visualizes the data.
 %
 % Takes MSR:    measurements file struct, output from function
 %               LoadMeasurements() provided by the janelia whisker tracker library
-%       fillnans: boolean input for whether to interpolate away NaN
-%               values in the output arrays. Highly reccomended!
-%       omitlast: boolean input for whether to omit the last whisker
 % 
 % Returns ANG: [TxN] array of whisker angles for N whiskers
 %         PTS: [3xNxT] array of follicle positions in homogenous (x;y;1)
 %         coordinates for N whiskers over T frames
-    
+
     %% Get data
     % get relevant columns from MSR
     fid = [MSR.fid];
     wid = [MSR.wid];
-    lab = [MSR.label];
     len = [MSR.length];
     ang = [MSR.angle];
     scr = [MSR.score];
     fx = [MSR.follicle_x];
     fy = [MSR.follicle_y];
 
-    % indices to filter out non-whiskers
-    idx = (lab ~= -1);
-    wsk = lab(idx);
+    %% narrow down to candidate points by asserting a length threshold
+    lenthres = 120;
+    select = (len >= lenthres);
 
-    % find uniquely identified whisker values
-    unq = unique(wsk);
+    %get selected values
+    fidsel = fid(select);
+    lensel = len(select);
+    anglesel = ang(select);
+    xsel = fx(select);
+    ysel = fy(select);
+    widsel = wid(select);
 
-    %calculate proportions
-    prop = zeros(length(unq),1);
-    for ii = 1:length(unq)
-        whisk = unq(ii);
-        prop(ii) = length(wsk(wsk==whisk))/length(wsk);
-    end
+    %reconstruct array
+    A = [fidsel',lensel',anglesel',xsel',ysel',widsel'];
     
-    %normalize proportions
-    prop_n = prop/max(prop);
+    %% Estimating T and N
+    %get T
+    T = max(fidsel) + 1;
+    Nsamps = zeros(1,T+1);
+    for t = 1:T
+        %get values at fid = t-1 (fid starts at 0)
+        tsel = A(:,1) == t-1;
+        samps = A(tsel,:);
+        %find and log how many things you get
+        Nsamps(t) = size(samps,1);
+    end
+    N = mode(Nsamps); %most common number of samples
+    
+    %% Initialize arrays
+    %stuff
+    B_log = zeros(N,5,T);
+    
+    %outputs
+    ANG = nan(T,N);
+    X = nan(T,N);
+    Y = nan(T,N);
+    LEN = nan(T,N);
+    
+    %% LABELING ALGORITHM
+    for t = 1:T
+        %get values at time = t
+        tsel = A(:,1) == t-1;
+        B = double(A(tsel,2:end));
 
-    %filter out by threshold
-    threshold = 0.1;
-    filter = prop_n > threshold;
+        %INITIAL CASE
+        if t == 1
+            %Sort selection by increasing value of X - Y
+            XmY = B(:,3) - B(:,4);
+            [~,si] = sort(XmY);
+            Bsort = B(si,:);
 
-    %get whiskers and other data
-    whiskers = unq(filter)+ 1; %+1 because janelia indices start with 0
-    N = max(whiskers);
-    T = max(fid);
+            %log first sort
+            B_log(:,:,1) = Bsort;
 
-    %% GETTING ANG & X,Y
-    ANG = zeros(T,N);
-    X = zeros(T,N);
-    Y = zeros(T,N);
-    for t = 0:T
-        %define and apply selection parameters
-        select = fid==t & wid < N & lab>-1; 
-        labsel = lab(select);
-        angsel = ang(select);
-        xsel = fx(select);
-        ysel = fy(select);
-
-        %sorting matrices
-        A = [double(labsel) ; angsel];
-        Ax = [double(labsel) ; xsel];
-        Ay = [double(labsel) ; ysel];
-
-        %initialize row of NaN to identify missing elements
-        init_row = NaN(1,N);
-        if isempty(labsel)
-            %log row
-            ANG(t+1,:) = init_row;
-            X(t+1,:) = init_row;
-            Y(t+1,:) = init_row;
+        %ELSE
         else
-            %reorder data
-            [~,sorti] = sort(labsel);
-            A_s = A(:,sorti);
-            A_sx = Ax(:,sorti);
-            A_sy = Ay(:,sorti);
+            %calculate distances from previous point. Don't include wid
+            Bm = B_log(:,:,t-1);
+            D = get_distances(B(:,3),Bm(:,3)); %1:3 for (x,y,th), 1:4 for (x,y,th,l)
             
-            %assign and log angles
-            init_row(A_s(1,:)+1) = A_s(2,:); %+1 to turn whisker id into MATLAB indices
-            ANG(t+1,:) = init_row; 
+            %% construct sort indices (new algorithm for classifying whiskers)
+            algmodes = {'min1','big2'}; 
+            algmode = algmodes{1};
             
-            %assign and log x
-            init_row = NaN(1,N);
-            init_row(A_sx(1,:)+1) = A_sx(2,:); %+1 to turn whisker id into MATLAB indices
-            X(t+1,:) = init_row; 
+            % get rankings per new point (1 = min distance to prev point --> N = max distance to prev point)
+            % the rows of the matrix "rnk" encode the nth min distance to each new point! this is neat.
+            [Dsort,rnk] = sort(D,1);
             
-            %assign and log y
-            init_row = NaN(1,N);
-            init_row(A_sy(1,:)+1) = A_sy(2,:); %+1 to turn whisker id into MATLAB indices
-            Y(t+1,:) = init_row;
-        end 
-    end
-    
-    %% Add additional 
-    EXTRA = zeros(T,3);
-    if extrasel
-        %define selection. Select for unlabeled whiskers above a length
-        %threshold.
-        lenthres = 100;
-        select = (lab == -1 & len >= lenthres);
-
-        %get selected values
-        fidsel = fid(select);
-        lensel = len(select);
-        anglesel = ang(select);
-        xsel = fx(select);
-        ysel = fy(select);
-        
-        %reconstruct array
-        B = [fidsel',lensel',anglesel',xsel',ysel'];
-        
-        %run through array to deal with certain cases...
-        for t = 0:T
-            %get the rows for the time
-            Bsel = B(fidsel == t,:); 
-            
-            %deal with gaps (NaN)
-            if isempty(Bsel)
-                %angle, x, and y are given a NaN value
-                EXTRA(t+1,1) = NaN;
-                EXTRA(t+1,2) = NaN;
-                EXTRA(t+1,3) = NaN;
-            
-            %log values
-            elseif size(Bsel,1) == 1
-                %angle, x, and y are logged
-                EXTRA(t+1,1) = Bsel(1,3);
-                EXTRA(t+1,2) = Bsel(1,4);
-                EXTRA(t+1,3) = Bsel(1,5);
-            
-            %deal with multiple selection
-            else 
-                %get the index of maximum length
-                [~,ind] = max(Bsel(:,2));
-                %log the maximum length values
-                EXTRA(t+1,1) = Bsel(ind,3);
-                EXTRA(t+1,2) = Bsel(ind,4);
-                EXTRA(t+1,3) = Bsel(ind,5); 
+            %check if all numbers are represented in row of rnk. If not,
+            %use some algorithm to sort them up to 1-1
+            if all(sort(rnk(1,:)) == 1:N)
+                %sort index is the top row of rnk
+                si = rnk(1,:)';
+            else
+                %initialize sort_i
+                si = rnk(1,:)';
+                
+                %here, the sort index is non-unique! Start algorithms...
+                switch algmode
+                    case 'min1' %sort by shortest 1st distance
+                        %find which points are in conflict...
+                        mocc = find(histcounts(rnk(1,:)) > 1); %list of all multiple-occuring values
+                        
+                        %find "available points"
+                        avail = find(~ismember(1:N,rnk(1,:))); %list of all old point values that havent been chosen
+                        
+                        for m = mocc %iterate over mocc to resolve conflicts
+                            %get indices in conflict
+                            conf_i = find(rnk(1,:)==m);
+                            
+                            %get the 1st-distances from those indices
+                            conf_1d = Dsort(1,conf_i);
+                            notmin = conf_i(conf_1d ~= min(conf_1d)); %"which of these is NOT the minimum?" (the minimum is already correct)
+                            
+                            %now loop over the not-mins and assign new values from available points 
+                            r = 2;
+                            while r <= N && ~isempty(avail)
+                                for nm = notmin
+                                    %check the r'th-distance index from the
+                                    %notmin value in question...
+                                    rth = rnk(r,nm);
+                                    if ismember(rth,avail)
+                                        %assign new index
+                                        si(nm) = rth;
+                                        %delete from avail
+                                        avail(avail ~= rth);
+                                    end
+                                end
+                                %increment r
+                                r = r + 1;
+                            end
+                        end
+                        
+                        
+                        
+                end
             end
             
+            %apply sort
+            Bsort = B(si,:);
+
+            %log sort
+            B_log(:,:,t) = Bsort;
+            
         end
-
-    %remove and fill outliers manually (CURRENTLY ONLY FOR 14 AND 15. ADD MORE IF NEEDED)
-    EXTRA_fill = EXTRA;
-    if numfile == 14
-        out_i = 942;
-        %interpolate out a new value
-        EXTRA_fill(out_i,1) = (1/2)*(EXTRA_fill(out_i-1,1)+EXTRA_fill(out_i+1,1));
-        EXTRA_fill(out_i,2) = (1/2)*(EXTRA_fill(out_i-1,2)+EXTRA_fill(out_i+1,2));
-        EXTRA_fill(out_i,3) = (1/2)*(EXTRA_fill(out_i-1,3)+EXTRA_fill(out_i+1,3));
-    elseif numfile == 15
-        out_i = 1626;
-        %interpolate out a new value
-        EXTRA_fill(out_i,1) = (1/2)*(EXTRA_fill(out_i-1,1)+EXTRA_fill(out_i+1,1));
-        EXTRA_fill(out_i,2) = (1/2)*(EXTRA_fill(out_i-1,2)+EXTRA_fill(out_i+1,2));
-        EXTRA_fill(out_i,3) = (1/2)*(EXTRA_fill(out_i-1,3)+EXTRA_fill(out_i+1,3));
-    end
-    
-    %append extra row
-    N = N+1; %increase N!
-    ANG = [EXTRA_fill(:,1),ANG]; %recall, N has been iterated up
-    X = [EXTRA_fill(:,2),X];
-    Y = [EXTRA_fill(:,3),Y];
-    
-    end
-    
-    %% interpolating to replace NaN values
-    if fillnans
-        %run function to fill NaN values
-        [ANG,X,Y] = preprocess_fillNaN(ANG,X,Y);
-    end
-    
-    %% Chop off end column
-    if omitlast
-        X = X(:,1:end-1);
-        Y = Y(:,1:end-1);
-        ANG = ANG(:,1:end-1); 
-        N = N-1;
+        
+        %assign output
+        LEN(t,:) = Bsort(:,1)';
+        ANG(t,:) = Bsort(:,2)';
+        X(t,:) = Bsort(:,3)';
+        Y(t,:) = Bsort(:,4)';
+        WID(t,:) = Bsort(:,5)';
+        
     end
 
-    %% Contruct PTS as (3xNxT)
-    %re-define T
-    T = size(ANG,1);
-    %initialize PTS
+    %convert X and Y to PTS
     PTS = ones(3,N,T);
     %assign x and y
     PTS(1,:,:) = permute(X,[3,2,1]);
     PTS(2,:,:) = permute(Y,[3,2,1]);
     
-    %% process figures
-    procfig = false;
-    if procfig
-        %define X range
-        range = 1:T;
-        
-        %first: filter by length threshold
-        f1 = figure(1);
-            sgtitle('(1/4): filtered by length threshold')
-            subplot(3,1,1)
-                %plot angle
-                plot(EXTRA(range,1))
-                title('Angle')
-                xlabel('t')
-                ylabel('angle')
-                
-                
-            subplot(3,1,2)
-                %plot x
-                plot(EXTRA(range,2))
-                title('x')
-                xlabel('t')
-                ylabel('x')
-                
-                
-            subplot(3,1,3)
-                %plot y
-                plot(EXTRA(range,3))
-                title('y')
-                xlabel('t')
-                ylabel('y')
-                
-        
-        %second: remove outliers  
-        figure(2)
-            sgtitle('(2/4): outliers removed via filloutliers()')
-            subplot(3,1,1)
-                %plot angle
-                plot(EXTRA_fill(range,1))
-                title('Angle')
-                xlabel('t')
-                ylabel('angle')
-                
-                
-            subplot(3,1,2)
-                %plot x
-                plot(EXTRA_fill(range,2))
-                title('x')
-                xlabel('t')
-                ylabel('x')
-                
-                
-            subplot(3,1,3)
-                %plot y
-                plot(EXTRA_fill(range,3))
-                title('y')
-                xlabel('t')
-                ylabel('y')
-                
-        
-        %third: NaN removed
-        figure(3)
-            sgtitle('(3/4): NaNs removed')
-            subplot(3,1,1)
-                %plot angle
-                plot(ANG(range,1))
-                title('Angle')
-                xlabel('t')
-                ylabel('angle')
-                
-                
-            subplot(3,1,2)
-                %plot x
-                plot(X(range,1))
-                title('x')
-                xlabel('t')
-                ylabel('x')
-                
-            subplot(3,1,3)
-                %plot y
-                plot(Y(range,1))
-                title('y')
-                xlabel('t')
-                ylabel('y')
-         
-        figure(4)
-            sgtitle('(4/4): low-pass filter to 50 Hz')
-            sfreq = 500; %500 fps video
-            freq = 50; %Hz - frequency for mice
-            ANG_f = bwfilt(ANG(range,1),sfreq,0,freq);
-            X_f = bwfilt(X(range,1),sfreq,0,freq);
-            Y_f = bwfilt(Y(range,1),sfreq,0,freq);
-            
-            subplot(3,1,1)
-                %plot angle
-                plot(ANG_f)
-                title('Angle')
-                xlabel('t')
-                ylabel('angle')
-                
-                
-            subplot(3,1,2)
-                %plot x
-                plot(X_f)
-                title('x')
-                xlabel('t')
-                ylabel('x')
-                
-            subplot(3,1,3)
-                %plot y
-                plot(Y_f)
-                title('y')
-                xlabel('t')
-                ylabel('y')
+    getdiff = 0;
+    if getdiff %plot the difference in distance values across the array. This gives a good estimate of how well tracking is performed
+        %get distances
+        figure;
+        plot(pts2distances(PTS));
     end
-    
-    
+
 end
 

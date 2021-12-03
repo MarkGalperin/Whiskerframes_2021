@@ -1,4 +1,4 @@
-function E = optimization_obj_line_1dof(th,M,s,bio_pts,bio_ang)
+function [E,info] = optimization_obj_line_1dof(th,M,s,bio_pts,bio_ang,Cstruct)
     %OBJECTIVE FUNCTION - Mean whisker error as a function of config.
     %   This function returns the cost for a certain configuration of design
     %   variables 
@@ -12,7 +12,9 @@ function E = optimization_obj_line_1dof(th,M,s,bio_pts,bio_ang)
     
     %% For all pts, calculate error
     N = size(bio_pts,2);
-    E_per = zeros(1,N);
+    Errs = zeros(1,N);
+    Prot = zeros(1,N);
+    Dang = zeros(1,N);
     
     for n = 1:N
         
@@ -23,17 +25,34 @@ function E = optimization_obj_line_1dof(th,M,s,bio_pts,bio_ang)
         u = (y*eye(2)-M)*w;
         
         %get protraction
-        p = atan(u(2)/u(1));
+        P = atan(u(2)/u(1));
+        Prot(n) = P;
         
         %Calculate error
-        E_per(1,n) = abs(p-bio_ang(n));
+        d_ang = P-bio_ang(n);
+        Dang(n) = d_ang;
+        switch Cstruct.errmode
+            case 'abs'
+                Errs(n) = abs(d_ang);
+            case 'squared'
+                Errs(n) = (d_ang)^2;
+            case '4'
+                Errs(n) = (d_ang)^4;
+        end
         
         %debug
 %         fprintf('y = %f, bio = %f, prot = %f, E = %f \n',y,bio_ang(n),p,E);
     end
     
-    %% get mean error
-    E = mean(E_per);
+    %% return mean error
+    E = mean(Errs);
+    
+    %% return info
+    if Cstruct.objinfo
+        info = [Prot ; bio_ang ; Dang ; Errs];
+    else
+        info = NaN(4,N);
+    end
     
     
     %debug

@@ -186,24 +186,54 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
 
             case 'line_1dof' %1DOF OPTIMIZER
                 %% get angle info
-                a = bio_ang(1); %top
-                b = bio_ang(end); %bottom (check this)
+                a = bio_ang(end); %top
+                b = bio_ang(1); %bottom (check this)
                 ma = tan(a);
                 mb = tan(b);
                 M = [ma/(ma-mb) , 1/(mb-ma) ; 1/((1/mb)-(1/ma)) , mb/(mb-ma)];
-
+                
+                %% Get previous thetas
+                thm = xm(3);
+                thmm = xmm(3);
+                
                 %% Perform optimization to get theta
                 %bounds
-                thlb = C.lb(3);
-                thub = C.ub(3);
-
+                thlb = a - pi/2;
+                thub = b + pi/2;
+                %modify bounds in reset case
+                if resetflag
+                    thlb = C.lb(3);
+                    thub = C.ub(3);
+                end
+                
                 %define objective and constraint
-                objective_1dof =  @(th) optimization_obj_line_1dof(th,M,s,bio_pts,bio_ang);
-                constraint_1dof = @(th) optimization_constraint_1dof(th,thm,M,s,C);
+                objective =  @(th) optimization_obj_line_1dof(th,M,s,bio_pts,bio_ang,C);
+                constraint = @(th) optimization_constraint_1dof(th,thm,thmm,M,C,t);
 
                 %run brute-force optimizer
-                res = 0.005;
-                [th, err, graph] = opt1dof(objective_1dof,[thlb,thub],res,constraint_1dof);
+                res = C.res(3);
+                [th, err, graph] = opt1dof(objective,[thlb,thub],res,constraint);
+                
+                %% Handle overconstraint
+                if isnan(th)
+                    %log overconstraint and error
+                    overc(t,1) = 1;
+                    [err,~] = objective(thm);
+                    
+                    %set control frame to previous position
+                    th = thm;
+                    thm = thmm;
+                    
+                    %RESET CASE (for when overconstraint occurs (C.ovrct) times in a row)
+                    if t >= C.ovrct && sum(overc(1+t-C.ovrct:t)) == C.ovrct
+                        %RESET CONSTRAINTS
+                        fprintf('PERFORMING RESET \n')
+                        resetflag = 1;                    
+                    end
+                    
+                else
+                    overc(t,1) = 0;
+                end
 
                 %% get r
                 %w vector
@@ -212,10 +242,18 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
                 
                 %% make x
                 x = [r',th];
-
+                
+                %% get info
+                [~,info] = objective(x);
+                
                 %% log values
                 x_log(t,:) = x;
                 E_log(t,1) = err;
+                info_log(:,:,t) = info;
+                
+                %% set previous
+                x = xm;
+                xm = xmm;
 
         end
     end
@@ -223,9 +261,21 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
     %% get trajectory
     traj = x_log;
     
+    %% calcuate absolute error mean          
+    info_derror = permute(info_log(3,:,:),[3 2 1]);
+    aem = mean(abs(info_derror));
+    
+    %% derive other stuff from trajectory...
+    %calculate p1 p2
+    traj_w = coordchange(traj,C.s,'rp');
+    %calculate m1 m2
+    traj_m = coordchange(traj,C.s,'rm');
+    %mechanical protractions
+    prot = permute(info_log(1,:,:),[3 2 1]);
+    
+    
     %% Saving trial data
-    %for my own sake, should make everything easier to package everything
-    %into this struct.
+    %for my own sake, should package everything into this struct...
     TRIAL = struct('traj',traj,...
                    'error',E_log,...
                    'info',info_log,...
@@ -235,12 +285,13 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
                    'PTS_bio',PTS,...
                    'ANG_bio',ANG,...
                    'file',file,...
-                   'overc',overc);
-    
-    %calcuate absolute error mean          
-    info_derror = permute(info(3,:,:),[3 2 1]);
-    aem = mean(abs(info_derror));
-    TRIAL.abserrmean = aem;  
+                   'overc',overc,...
+                   'abserrmean',aem,...
+                    'traj_w',traj_w,...
+                    'traj_m',traj_m,...
+                    'prot',prot,...
+                    'dataset_num',C.datasetnum,...
+                    'constraint_num',C.constraintnum);  
                
     %% ANIMATE %%
     if animate

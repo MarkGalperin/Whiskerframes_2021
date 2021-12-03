@@ -1,8 +1,15 @@
-function Fig = plot_whiskercomp(X,N,ANG,prot,error,overc)
+function Fig = plot_whiskercomp(TRIAL,X)
 % *** WHISKER OUTPUT COMPARISON ***
 % This function is a wrapper for plot_shadededcomp() to produce the output
 % plot for N whiskers. It also optionally plots the sum error underneath.
-
+    
+    %% Unpack TRIAL
+    prot = TRIAL.prot;
+    overc = TRIAL.overc;
+    error = permute(TRIAL.info(3,:,:),[3 2 1]);
+    ANG = TRIAL.ANG_bio;
+    N = size(TRIAL.ANG_bio,2);
+    
     %% determine number of subplots
     if isnan(error)
         numplots = N;

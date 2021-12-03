@@ -2,18 +2,38 @@
 clear;
 clc;
 
-%% plotting out some filtered data
-DATA_i = load('../data/processed/filtered/filt_janelia_15_(3_25_17).mat');
+%trying tight_subplot
+[ha,pos] = tight_subplot(3,2,[.08 .03],[.1 .01],[.01 .01]);
+    for ii = 1:6
+        axes(ha(ii));
+        plot(randn(10,ii)); 
+    end
+set(ha(1:4),'XTickLabel',''); set(ha,'YTickLabel','')
 
-%% cut down the data to a manageble or target time range
-X = 1:500; %X = 1:size(DATA_i.ANG,1)
-ANG_cut = DATA_i.angles(X,:);
-PTS_cut = DATA_i.points(:,:,X);
-%get x and y for the first whisker
-X = reshape(PTS_cut(1,1,:),[500,1]);
-Y = reshape(PTS_cut(2,1,:),[500,1]);
 
-plot(ANG_cut)
+% %% switch case
+% thing = '3';
+% 
+% switch thing
+%     case '1'
+%         fprintf('1 \n');
+%     case {'2','3'}
+%         fprintf('23 \n');
+% end
+
+
+% %% plotting out some filtered data
+% DATA_i = load('../data/processed/filtered/filt_janelia_15_(3_25_17).mat');
+% 
+% %% cut down the data to a manageble or target time range
+% X = 1:500; %X = 1:size(DATA_i.ANG,1)
+% ANG_cut = DATA_i.angles(X,:);
+% PTS_cut = DATA_i.points(:,:,X);
+% %get x and y for the first whisker
+% X = reshape(PTS_cut(1,1,:),[500,1]);
+% Y = reshape(PTS_cut(2,1,:),[500,1]);
+% 
+% plot(ANG_cut)
 
 % subplot(1,3,1)
 %     plot(ANG_cut(:,1));
