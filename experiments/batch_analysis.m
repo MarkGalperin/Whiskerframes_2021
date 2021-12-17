@@ -12,10 +12,10 @@ addpath('../src/optimization');
 
 %% Which analyses are we running?
 % true = perform this analysis, false = don't
-run_writeresults = 0;
-run_makefigures = 0;
+run_writeresults = 1;
+run_makefigures = 1;
 run_correlations = 0;
-run_trackoc = 1;
+run_trackoc = 0;
 
 RUN = [run_writeresults,...
        run_makefigures,...
@@ -24,7 +24,7 @@ RUN = [run_writeresults,...
 
 %% LOAD DATA
 % choose batch directory
-batch_dir = '../output/trial_data/BATCH_3dof_nov23/'; %make sure to end with "/"
+batch_dir = '../output/trial_data/BATCH/'; %make sure to end with "/"
 SETS = batch_load(batch_dir);
 
 %% MAKE RESULTS DIRECTORY
@@ -104,7 +104,7 @@ for set_i = 1:length(SETS)
             
             if RUN(2)
                 %% MAKE FIGURES FOR OPTIMIZATIONS
-                file = 'full_r1r2'; %figure batch directory name
+                file = '500_r1r2'; %figure batch directory name
                 
                 %file setup
                 filepath = [figures_dir,file,'/',trial.TRIAL(opt).file(2:3),'/',sprintf('OPT%d',opt)];
@@ -148,7 +148,7 @@ for set_i = 1:length(SETS)
                 S.overc = {true,'-r'};
 
                 %range
-                X = 1:size(prot,1); %1:500;
+                X = 1:500; %1:size(prot,1);
 
                 %Generate plot
                 conf_plots = plot_config(S,TRIAL,X);
@@ -217,6 +217,7 @@ if RUN(4) && plot_oc
     end
 end
 
-
+%% say ur done
+fprintf('done \n');
 
 

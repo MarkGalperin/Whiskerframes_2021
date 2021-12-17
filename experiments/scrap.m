@@ -2,13 +2,93 @@
 clear;
 clc;
 
-%trying tight_subplot
-[ha,pos] = tight_subplot(3,2,[.08 .03],[.1 .01],[.01 .01]);
-    for ii = 1:6
-        axes(ha(ii));
-        plot(randn(10,ii)); 
-    end
-set(ha(1:4),'XTickLabel',''); set(ha,'YTickLabel','')
+%include stuff
+addpath('../src/optimization');
+
+%% %% FIRST STEP TO A BETTER (faster) BRUTE-FORCE OPTIMIZER %% %%
+% %trying to index out points using contraint functions
+% start w/ boundaries...
+C.res = [0.01, 0.01, 0.005]; %search resolution for r1,r2,th
+C.lb = [-0.5,-0.25,-pi/2]; %lower value bounds
+C.ub = [0,1.25,pi/2]; %upper value bounds
+C.sb = [1,1,pi/3]; %search box absolute dimensions
+C.s = 0.3;
+C.c = 0.1; %compatability tolerance
+% define constraint
+C.R = 0.5; %xy jump tolerance (NEW: this now only makes sense to be less than the search box, otherwise the searchbox defines the constraint)
+C.accel = 0.1; %xy acceleration tolerance
+C.dtheta = (pi/2); %theta jump tolerance
+C.ddtheta = 0.1; %theta acceleration constraint
+%define a configuration at a moment in time where you want to apply cuts to your search space...
+% random slice I took from some dataset...
+%    -0.3600    0.0900    0.3548
+%    -0.3800    0.1100    0.2192
+%    -0.3800    0.1300    0.1256
+%    -0.3800    0.1300    0.0820
+%    -0.3800    0.1300    0.0764
+%    -0.3600    0.1100    0.1208
+%    -0.3400    0.1100    0.1632
+xmm = [-0.3800    0.1300    0.0764];
+xm = [-0.3600    0.1100    0.1208];
+traj_t = xm;
+
+%define an r1,r2,theta array mesh?
+r1_range = C.lb(1):C.res(1):C.ub(1);
+r2_range = C.lb(2):C.res(2):C.ub(2);
+th_range = C.lb(3):C.res(3):C.ub(3);
+
+%make this into a MESH
+[R1,R2,TH] = meshgrid(r1_range,r2_range,th_range);
+
+%order mesh into a single axis (full set)...
+S0 = [R1(:),R2(:),TH(:)]; %this step takes 0.1 seconds
+
+%% apply 1st cut to the set...
+%local bounds
+r1_min = max([C.lb(1),traj_t(1)-C.sb(1)/2]);
+r1_max = min([C.ub(1),traj_t(1)+C.sb(1)/2]);
+r2_min = max([C.lb(2),traj_t(2)-C.sb(2)/2]);
+r2_max = min([C.ub(2),traj_t(2)+C.sb(2)/2]);
+th_min = max([C.lb(3),traj_t(3)-C.sb(3)/2]);
+th_max = min([C.ub(3),traj_t(3)+C.sb(3)/2]);
+%generate index
+S0_i = (S0(:,1) > r1_min) & (S0(:,1) < r1_max) &...
+       (S0(:,2) > r2_min) & (S0(:,2) < r2_max) &...
+       (S0(:,3) > th_min) & (S0(:,3) < th_max);
+
+S1 = S0(S0_i,:);
+
+%% now apply constraint functions to set...
+[g_arr,S1_i,val] = newconst(S1,xm,xmm,C);
+
+%apply index
+S2 = S1(S1_i,:);
+
+%% New objective function!
+[Errs,Prot,Dang] = newobj(S2,C,bio_pts,bio_ang);
+
+% return mean error E
+E = mean(Errs,2);
+
+%% return info
+if Cstruct.objinfo
+    info = [Prot ; bio_ang ; Dang ; Errs];
+else
+    info = NaN(4,N);
+end
+
+
+
+
+
+
+% %trying tight_subplot
+% [ha,pos] = tight_subplot(3,2,[.08 .03],[.1 .01],[.01 .01]);
+%     for ii = 1:6
+%         axes(ha(ii));
+%         plot(randn(10,ii)); 
+%     end
+% set(ha(1:4),'XTickLabel',''); set(ha,'YTickLabel','')
 
 
 % %% switch case

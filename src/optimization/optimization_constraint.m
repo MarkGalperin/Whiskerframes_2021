@@ -1,4 +1,4 @@
-function C_check = optimization_constraint2(x,xm,xmm,s,C)
+function C_check = optimization_constraint(x,xm,xmm,s,C)
 %CONSTRAINT FUNCTION
 %   This function returns the cost for a certain configuration of design
 %   variables 

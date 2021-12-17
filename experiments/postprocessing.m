@@ -27,17 +27,17 @@ RUN = [run_animate,...
 %
 if RUN(1)
 %     loadstr = '../output/trial_data/Oct7_Mar17.mat';  
-%     loadstr = '../output/trial_data/3dof_restest8.mat'; 
-%     loadstr = '../output/trial_data/post_filtered/Oct7_postfilt.mat'; 
+%     loadstr = '../output/trial_data/V4_mtest.mat'; 
+    loadstr = '../output/trial_data/post_filtered/V4_mtest_postfilt.mat'; 
 %     loadstr = '../output/trial_data/bias/one/test1.mat'; 
 %     loadstr = '../output/trial_data/bias/two/Sept28_test2.mat'; 
 %     loadstr = '../output/trial_data/BATCH_Oct19/BatchSet_15/D15_C001.mat';    
 %     loadstr = '../output/trial_data/BATCH_1dof_Nov27/BatchSet_15/D15_C007.mat';
-    loadstr = '../output/trial_data/BATCH_3dof_Nov23/BatchSet_14/D14_C008.mat';
+%     loadstr = '../output/trial_data/BATCH_3dof_Dec4/BatchSet_16/D16_C008.mat';
 %     loadstr = '../output/trial_data/Sept24_reset_nocon3.mat';
 
     TRIAL = load(loadstr);
-    TRIAL.file = 'Nov23_3dof_C8';
+    TRIAL.file = 'V4_mtest_filt';
     % Generate Animation
     complete = optimization_animate(TRIAL); %automatically saves to output/movies/optimization/
 end
@@ -45,8 +45,8 @@ end
 %% POST-FILTER TRAJECTORIES
 if RUN(2)
     %get trial data
-    loadstr = '../output/trial_data/Oct7_Mar17.mat'; 
-    fileout = 'Oct7_postfilt';
+    loadstr = '../output/trial_data/V4_mtest.mat'; 
+    fileout = 'V4_mtest_postfilt';
     Tstruct = load(loadstr);
     PTS = Tstruct.PTS_bio;
     ANG = Tstruct.ANG_bio;

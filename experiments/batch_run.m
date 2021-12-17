@@ -1,11 +1,6 @@
 %% BATCH TRIALS 
 % Running everything!!!
-% OUTLINE
-% - Define lists of parameters to permute over
-% - LOOP over selected data (22 videos)
-%   - Perform optimization (or 2 optimizations via bias method)
-%   - Perform post-filtering
-%   - Save trial data
+% Updated for v4 on Dec 6th
 clear;
 clc;
 
@@ -16,8 +11,7 @@ addpath('../src/optimization');
 
 %% Batch trial settings
 biasalg = false;             %run bias algorithm, which performs two optimizations
-% RES = [0.01, 0.01, 0.005];  %Set Resolution (warning, this effects running time exponentially)
-RES = [0.02, 0.02, 0.001];  %Set Resolution (warning, this effects running time exponentially)
+RES = [0.01, 0.01, 0.001];  %Set Resolution 
 
 %% DEFINE PARAMETERS
 %define a cell datatype with the three dynamic constraint modes
@@ -30,27 +24,27 @@ RES = [0.02, 0.02, 0.001];  %Set Resolution (warning, this effects running time 
 %             struct('R',0.2,'accel',0.20,'dtheta',pi/6,'ddtheta',0.008),...
 %             struct('R',0.2,'accel',0.15,'dtheta',pi/6,'ddtheta',0.008),...
 %             struct('R',0.2,'accel',0.15,'dtheta',pi/6,'ddtheta',0.015)}; % Oct15
-
+dynamics = {struct('R',0.2,'accel',0.10,'dtheta',pi/2,'ddtheta',0.10)};
 
     % 1-DOF trials
-dynamics = {struct('R',0.2,'accel',0.2,'dtheta',pi/10,'ddtheta',0.020),...   
-            struct('R',0.2,'accel',0.2,'dtheta',pi/10,'ddtheta',0.010),...      
-            struct('R',0.2,'accel',0.2,'dtheta',pi/10,'ddtheta',0.005),...      
-            struct('R',0.2,'accel',0.2,'dtheta',pi/30,'ddtheta',0.020),...
-            struct('R',0.2,'accel',0.2,'dtheta',pi/30,'ddtheta',0.010),...
-            struct('R',0.2,'accel',0.2,'dtheta',pi/30,'ddtheta',0.005),...
-            struct('R',0.2,'accel',0.2,'dtheta',pi/180,'ddtheta',0.020),...   
-            struct('R',0.2,'accel',0.2,'dtheta',pi/180,'ddtheta',0.010),...      
-            struct('R',0.2,'accel',0.2,'dtheta',pi/180,'ddtheta',0.005)}; 
+% dynamics = {struct('R',0.2,'accel',0.2,'dtheta',pi/10,'ddtheta',0.020),...   
+%             struct('R',0.2,'accel',0.2,'dtheta',pi/10,'ddtheta',0.010),...      
+%             struct('R',0.2,'accel',0.2,'dtheta',pi/10,'ddtheta',0.005),...      
+%             struct('R',0.2,'accel',0.2,'dtheta',pi/30,'ddtheta',0.020),...
+%             struct('R',0.2,'accel',0.2,'dtheta',pi/30,'ddtheta',0.010),...
+%             struct('R',0.2,'accel',0.2,'dtheta',pi/30,'ddtheta',0.005),...
+%             struct('R',0.2,'accel',0.2,'dtheta',pi/180,'ddtheta',0.020),...   
+%             struct('R',0.2,'accel',0.2,'dtheta',pi/180,'ddtheta',0.010),...      
+%             struct('R',0.2,'accel',0.2,'dtheta',pi/180,'ddtheta',0.005)}; 
+% dynamics = {struct('R',0.2,'accel',0.2,'dtheta',pi/180,'ddtheta',0.020)};
 
-% dynamics = {struct('R',0.2,'accel',0.2,'dtheta',pi/30,'ddtheta',0.020)}; 
 
 %put all values to loop over in cell arrays (WARNING currently only works for current multiple-value arrays)
 PARAMS = struct('s',{0.6},...
                 'c',{0.1},...
                 'errmode',{'squared'},...
                 'res',{RES},...
-                'lb',{[-1.5 -0.2500 -pi/2]},...
+                'lb',{[-1 -0.2500 -pi/2]},...
                 'ub',{[0 1.2500 pi/2]},...
                 'sb',{[0.4000 0.4000 1.0472]},...
                 'bias',{'zeros'});
@@ -127,7 +121,7 @@ skips = strcmp(ALLX,'skip');
 
 %% File setup
 %batch directory! this is where everything will be stored
-batchdir = '../output/trial_data/BATCH_1dof_o/'; 
+batchdir = '../output/trial_data/BATCH/'; 
 
     
 %% LOOP!!!
@@ -185,7 +179,7 @@ for file_i = files(~skips) %file_i is the index to loop over
         DATA.points = PTS_cut;
 
         %% MODE AND SETUP FOR BOTH OPTIMIZATIONS
-        mode = 'line_1dof';     % 3 modes: 'line_3dof' , 'line_1dof', 'circular' (circular not yet implemented)
+        mode = 'line_3dof';     % 3 modes: 'line_3dof' , 'line_1dof', 'circular' (circular not yet implemented)
         animate = 0;            % generate animation?
         file = sprintf('D%.2d_C%.3d',file_i,trial_i); % file name
         
@@ -215,7 +209,8 @@ for file_i = files(~skips) %file_i is the index to loop over
                         'traj_m',{},...
                         'prot',{},...
                         'dataset_num',{},...
-                        'constraint_num',{});
+                        'constraint_num',{},...
+                        'timer',{});
         file_trial = append('../output/trial_data/bias/one/',file);
         
         %% last-minute defaults
@@ -248,7 +243,7 @@ for file_i = files(~skips) %file_i is the index to loop over
         
         %% RUN OPTIMIZATION #1
         fprintf('RUNNING OPTIMIZATION 1 \n');
-        TRIAL(1) =  trajopt(DATA,mode,file,animate,C); %TRIAL contains trajectory, error, mode, constraints, and s
+        TRIAL(1) =  trajopt_v4(DATA,mode,file,animate,C); %TRIAL contains trajectory, error, mode, constraints, and s
         
         %% RUN OPTIMIZATION #2
         if biasalg 

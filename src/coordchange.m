@@ -65,10 +65,6 @@ function traj2 = coordchange(traj,s,mode)
                 % construct new trajectory
                 traj2(t,:) = [v2,th];
             end
-            
-            
     end
-    
-    
 end
 

@@ -18,14 +18,14 @@ addpath('../src')
 addpath('../src/figures');
 
 %% Get (1) trial data TODO: make all
-% loadstr = '../output/trial_data/Sep1test_thetalim1_stest2.mat'; 
-% loadstr = '../output/trial_data/post_filtered/restest8_filt.mat'; 
+% loadstr = '../output/trial_data/V4_mtest.mat'; 
+loadstr = '../output/trial_data/post_filtered/V4test2_postfilt.mat'; 
 % loadstr = '../output/trial_data/3dof_restest8.mat'; 
 % loadstr = '../output/trial_data/hjhjg_evenbias.mat'; 
 % loadstr = '../output/trial_data/bias/two/Sept28_test2.mat'; 
 % loadstr = '../output/trial_data/Sept24_reset_nocon3.mat'; 
 % loadstr = '../output/trial_data/Oct7_Mar17.mat';
-loadstr = '../output/trial_data/BATCH_Oct16/BatchSet_15/D15_C003.mat';
+% loadstr = '../output/trial_data/BATCH_Oct16/BatchSet_15/D15_C003.mat';
 % loadstr = '../output/trial_data/BATCH_oct16_filt/BatchSet_16/D16_C001.mat';
 
 %get trial (and filter for different output formats)
@@ -59,16 +59,16 @@ multi = true;
 if multi
     %% file setup
     multidir = '../output/figures/multi/';
-    file = 'Oct18_pinv';
+    file = 'V4_postfilt_full';
     filepath = [multidir,file];
     %make directory
     mkdir(filepath)
     
     %% configuration plot
     %PLOT SETTINGS IN STRUCT S
-    S.conf_r1r2 = {false,'-r','-m','-b'}; % r1,r2 configuration
+    S.conf_r1r2 = {true,'-r','-m','-b'}; % r1,r2 configuration
     S.conf_p1p2 = {false,'-r','-m','-b'}; % w basis configuration
-    S.conf_p1invp2 = {true,'-r','-m','-b'}; % w basis configuration with 1/p1
+    S.conf_p1invp2 = {false,'-r','-m','-b'}; % w basis configuration with 1/p1
     S.conf_v1v2 = {false}; % trajectory velocity
     S.conf_a1a2 = {false}; % trajectory acceleration
     S.conf_biomeanp = {false,'-k'};% mean protraction (biological)
@@ -81,15 +81,16 @@ if multi
     S.conf_error = {false,'-k'}; %mean error
     %error normalized?
     S.normalized = 0;
+    %show overconstraint events
     S.overc = {true,'-r'};
-    
+
     %range
-    X = 1:500;%1:size(prot,1);
-     
-    % Generate plot
-    conf_plots = plot_config(S,TRIAL,X,prot);
-    % Save plot 
-    conf_file = [file,'_conf'];
+    X =  1:size(prot,1);
+
+    %Generate plot
+    conf_plots = plot_config(S,TRIAL,X);
+    %Save plot 
+    conf_file = [file,'_',TRIAL.file,'_conf'];
     conf_path = filepath;
     saveas(conf_plots, fullfile(conf_path, conf_file), 'png');
     clf;
@@ -98,24 +99,13 @@ if multi
     %generate plot
     N = size(ANG,2);
     ploterror = true;
-    if ~isfield(TRIAL,'overc')
-        TRIAL.overc = NaN;
-    end
-    comp_plots = plot_whiskercomp(X,N,ANG,info_prot,abs(info_derror),TRIAL.overc);
-    
+    comp_plots = plot_whiskercomp(TRIAL,X);
+
     %save plot
-    comp_file = [file,'_comp']; 
+    comp_file = [file,'_',TRIAL.file,'_comp']; 
     comp_path = filepath; 
     saveas(comp_plots, fullfile(comp_path, comp_file), 'png');
-    clf;
-
-    %% error
-    %generate plot
-    err_plot = plot_error2(X,abs(info_derror),'-r');
-    %save plot
-    err_file = [file,'_err']; 
-    err_path = filepath; 
-    saveas(err_plot, fullfile(err_path, err_file), 'png');
+    clf; 
 
 end
 
