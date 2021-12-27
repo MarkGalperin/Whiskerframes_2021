@@ -32,7 +32,7 @@ C.ovrct = 3; %overconstraint threshold
 %dynamic constraints
 C.R = 1; %xy jump tolerance (NEW: this now only makes sense to be less than the search box, otherwise the searchbox defines the constraint)
 C.accel = 1; %xy acceleration tolerance
-C.dtheta = .1; %theta jump tolerance
+C.dtheta = ; %theta jump tolerance
 C.ddtheta = 0.050; %theta acceleration constraint
 %search parameters
 C.res = [0.02, 0.02, 0.0001]; %search resolution for r1,r2,th (or m1,m2,th)

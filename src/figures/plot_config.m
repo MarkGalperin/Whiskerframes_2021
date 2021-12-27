@@ -150,6 +150,18 @@ function Fig = plot_config(S,TRIAL,X)
                 end
             end
         end
+        %plot constraint relaxation events
+        if S.relax{1}
+            if isfield(TRIAL,'overc')
+                events = find(TRIAL.relax(X));
+                if ~isempty(events)
+                    for linx = events
+                        %plot vertical line at overconstraint event
+                        xline(linx,S.relax{2})
+                    end
+                end
+            end
+        end
         
 
         %get constraint info (for title)

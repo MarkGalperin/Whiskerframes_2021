@@ -1,4 +1,4 @@
-function TRIAL = trajopt(DATA,mode,file,animate,C)
+function TRIAL = trajopt_v4(DATA,mode,file,animate,C)
 %% TRAJECTORY OPTIMIZATION (v4)
 % Trajectory Optimization for biomimetic whiskers - version 4
 %
@@ -44,19 +44,28 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
     x_log = zeros(T,3);
     E_log = zeros(T,1);
     overc = zeros(T,1); 
+    rlx_log = zeros(T,1); 
     info_log = zeros(4,N,T);
     resetflag = 0;
     
-    %calculate full search space mesh
-    r1_range = C.lb(1):C.res(1):C.ub(1);
-    r2_range = C.lb(2):C.res(2):C.ub(2);
-    th_range = C.lb(3):C.res(3):C.ub(3);
-    [R1,R2,TH] = meshgrid(r1_range,r2_range,th_range);    
-    %assemble full search space 
-    S0 = [R1(:),R2(:),TH(:)];
+    %calculate full search space mesh, based on mode
+    if strcmp(mode,'line_3dof')
+        %3-dof search space
+        r1_range = C.lb(1):C.res(1):C.ub(1);
+        r2_range = C.lb(2):C.res(2):C.ub(2);
+        th_range = C.lb(3):C.res(3):C.ub(3);
+        [R1,R2,TH] = meshgrid(r1_range,r2_range,th_range);    
+        %assemble full search space 
+        S0 = [R1(:),R2(:),TH(:)];
+        
+    elseif strcmp(mode,'line_1dof')
+        %1-dof search space
+        th_range = C.lb(3):C.res(3):C.ub(3);
+        TH = th_range';   
+    end
     
-    %TRANSFORM SEARCH SPACE
-    if isfield(C,'axis')
+    %TRANSFORM SEARCH SPACE FOR 3-DOF
+    if isfield(C,'axis') && strcmp(mode,'line_3dof')
         switch C.axis
             case 'r'
                 %do nothing!
@@ -75,6 +84,22 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
         % GET BIO DATA
         bio_pts = PTS(:,:,t); 
         bio_ang = ANG(t,:);
+        
+        % (1-dof setup)
+        if strcmp(mode,'line_1dof')
+            % get M matrix
+            a = bio_ang(end); %top
+            b = bio_ang(1); %bottom (check this)
+            ma = tan(a);
+            mb = tan(b);
+            M = [ma/(ma-mb) , 1/(mb-ma) ; 1/((1/mb)-(1/ma)) , mb/(mb-ma)];
+            
+            % get w array
+            w = [s*sin(TH),1-s*cos(TH)]';
+            
+            % construct S0
+            S0 = [(M*w)',TH]; %this calculates r = M*w for the first two columns, then theta for third
+        end
 
         % GET PREVIOUS CONFIGURATION
         % Here, NaN will signal the higher order constraints to
@@ -90,161 +115,91 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
             xmm = x_log(t-2,:);
         end
 
-        %MODE
-        switch mode
-            case 'line_3dof' 
-                %% 3DOF OPTIMIZER               
-                %first frame chooses from entire seach space
-                if any(isnan(xm)) || resetflag 
-                    %search set is the entire set
-                    S1 = S0;
-                    resetflag = 0;
-                    resetflag2 = 0;
-                else
-                    %get the unconstrained search set S1 as fxn of xm
-                    r1_min = max([C.lb(1),xm(1)-C.sb(1)/2]);
-                    r1_max = min([C.ub(1),xm(1)+C.sb(1)/2]);
-                    r2_min = max([C.lb(2),xm(2)-C.sb(2)/2]);
-                    r2_max = min([C.ub(2),xm(2)+C.sb(2)/2]);
-                    th_min = max([C.lb(3),xm(3)-C.sb(3)/2]);
-                    th_max = min([C.ub(3),xm(3)+C.sb(3)/2]);
-                    S0_i = (S0(:,1) > r1_min) & (S0(:,1) < r1_max) &...
-                           (S0(:,2) > r2_min) & (S0(:,2) < r2_max) &...
-                           (S0(:,3) > th_min) & (S0(:,3) < th_max); %index
-                    %index full search space
-                    S1 = S0(S0_i,:); %this is the unconstrained search set
-                end               
-                
-                % APPLY CONSTRAINTS %
-                [~,S1_i] = newconst(S1,xm,xmm,C);
-                %apply index
-                S2 = S1(S1_i,:); %S2 is the feasible set
-                clear S1 %clear S1 so its not in memory
-                
-                %handle overconstraint
-                if ~isempty(S2)
-                    % EVALUATE FEASIBLE SET % 
-                    [Errs,Prot,Dang] = newobj(S2,C,bio_pts,bio_ang);
-                    %get mean error
-                    E = mean(Errs,2); %error over candidate configs
-                    %EVALUATE MINIMUM ERROR CONFIG
-                    [err,min_i] = min(E);
-                    x = S2(min_i,:);
-                    %return info at minimum error
-                    info = [Prot(min_i,:);  ...
-                            bio_ang;        ...
-                            Dang(min_i,:);  ...
-                            Errs(min_i,:)];
-                else
-                    %announce overconstraint
-                    fprintf('OVERCONSTRAINED \n');
-                    
-                    %log overconstraint event and error
-                    overc(t,1) = 1;
-                    
-                    %calculate error based on previous config
-                    [Errs,Prot,Dang] = newobj(xm,C,bio_pts,bio_ang);
-                    E = mean(Errs,2); %error over candidate configs
-                    [err,min_i] = min(E);
-                    info = [Prot(min_i,:);  ...
-                            bio_ang;        ...
-                            Dang(min_i,:);  ...
-                            Errs(min_i,:)];
-                    
-                    %set control frame to previous position
-                    x = xm;
-                    xm = xmm; %is this erroneous?? result is a 2x-shift...
-                    
-                    % RESET CASE
-                    if t >= C.ovrct && sum(overc(1+t-C.ovrct:t)) == C.ovrct %if there have been C.ovrct events in the last C.ovrct time frames
-                        %RESET CONSTRAINTS
-                        fprintf('PERFORMING RESET \n')
-                        resetflag = 1; %this will trigger no constraints in the next loop
-                    end
-                end
-         
-                % log values
-                x_log(t,:) = x;
-                E_log(t,1) = err;
-                info_log(:,:,t) = info;
-                
-                % set previous
-                x = xm;
-                xm = xmm;
+        %% OPTIMIZER               
+        %first frame chooses from entire seach space
+        if any(isnan(xm)) || resetflag 
+            %search set is the entire set
+            S1 = S0;
+            if resetflag == 1
+                db = 'here';
+            end
+            resetflag = 0;
+            
+        else
+            %get the unconstrained search set S1 as fxn of xm
+            r1_min = max([C.lb(1),xm(1)-C.sb(1)/2]);
+            r1_max = min([C.ub(1),xm(1)+C.sb(1)/2]);
+            r2_min = max([C.lb(2),xm(2)-C.sb(2)/2]);
+            r2_max = min([C.ub(2),xm(2)+C.sb(2)/2]);
+            th_min = max([C.lb(3),xm(3)-C.sb(3)/2]);
+            th_max = min([C.ub(3),xm(3)+C.sb(3)/2]);
+            S0_i = (S0(:,1) > r1_min) & (S0(:,1) < r1_max) &...
+                   (S0(:,2) > r2_min) & (S0(:,2) < r2_max) &...
+                   (S0(:,3) > th_min) & (S0(:,3) < th_max); %index
+            %index full search space
+            S1 = S0(S0_i,:); %this is the unconstrained search set
+        end               
 
-            case 'line_1dof' 
-                %% 1DOF OPTIMIZER
-                % get angle info
-                a = bio_ang(end); %top
-                b = bio_ang(1); %bottom (check this)
-                ma = tan(a);
-                mb = tan(b);
-                M = [ma/(ma-mb) , 1/(mb-ma) ; 1/((1/mb)-(1/ma)) , mb/(mb-ma)];
-                
-                % Get previous thetas
-                thm = xm(3);
-                thmm = xmm(3);
-                
-                % Perform optimization to get theta
-                %bounds
-                thlb = a - pi/2;
-                thub = b + pi/2;
-                %modify bounds in reset case
-                if resetflag
-                    thlb = C.lb(3);
-                    thub = C.ub(3);
-                end
-                
-                %define objective and constraint
-                objective =  @(th) optimization_obj_line_1dof(th,M,s,bio_pts,bio_ang,C);
-                constraint = @(th) optimization_constraint_1dof(th,thm,thmm,M,C,t);
+        % APPLY CONSTRAINTS %
+        [~,S1_i,rlxi] = newconst(S1,xm,xmm,C);
+        %apply index
+        S2 = S1(S1_i,:); %S2 is the feasible set
+        clear S1 %clear S1 so its not in memory
+        
+        %log relaxation
+        rlx_log(t) = rlxi;
 
-                %run brute-force optimizer
-                res = C.res(3);
-                [th, err, graph] = opt1dof(objective,[thlb,thub],res,constraint);
-                
-                % Handle overconstraint
-                if isnan(th)
-                    %log overconstraint and error
-                    overc(t,1) = 1;
-                    [err,~] = objective(thm);
-                    
-                    %set control frame to previous position
-                    th = thm;
-                    thm = thmm;
-                    
-                    %RESET CASE (for when overconstraint occurs (C.ovrct) times in a row)
-                    if t >= C.ovrct && sum(overc(1+t-C.ovrct:t)) == C.ovrct
-                        %RESET CONSTRAINTS
-                        fprintf('PERFORMING RESET \n')
-                        resetflag = 1;                    
-                    end
-                    
-                else
-                    overc(t,1) = 0;
-                end
+        %handle overconstraint
+        if ~isempty(S2)
+            % EVALUATE FEASIBLE SET % 
+            [Errs,Prot,Dang] = newobj(S2,C,bio_pts,bio_ang);
+            %get mean error
+            E = mean(Errs,2); %error over candidate configs
+            %EVALUATE MINIMUM ERROR CONFIG
+            [err,min_i] = min(E);
+            x = S2(min_i,:);
+            %return info at minimum error
+            info = [Prot(min_i,:);  ...
+                    bio_ang;        ...
+                    Dang(min_i,:);  ...
+                    Errs(min_i,:)];
+        else
+            %announce overconstraint
+            fprintf('OVERCONSTRAINED \n');
 
-                % get r
-                %w vector
-                w = [s*sin(th);1-s*cos(th)];
-                r = M*w;
-                
-                % make x
-                x = [r',th];
-                
-                % get info
-                [~,info] = objective(x);
-                
-                % log values
-                x_log(t,:) = x;
-                E_log(t,1) = err;
-                info_log(:,:,t) = info;
-                
-                %% set previous
-                x = xm;
-                xm = xmm;
+            %log overconstraint event and error
+            overc(t,1) = 1;
 
-        end %end mode switch
+            %calculate error based on previous config
+            [Errs,Prot,Dang] = newobj(xm,C,bio_pts,bio_ang);
+            E = mean(Errs,2); %error over candidate configs
+            [err,min_i] = min(E);
+            info = [Prot(min_i,:);  ...
+                    bio_ang;        ...
+                    Dang(min_i,:);  ...
+                    Errs(min_i,:)];
+
+            %set control frame to previous position (stay in place)
+            x = xm;
+            xm = xmm; 
+
+            % RESET CASE
+            if t >= C.ovrct && sum(overc(1+t-C.ovrct:t)) == C.ovrct %if there have been C.ovrct events in the last C.ovrct time frames
+                %RESET CONSTRAINTS
+                fprintf('PERFORMING RESET \n')
+                resetflag = 1; %this will trigger no constraints in the next loop
+            end
+        end
+
+        % log values
+        x_log(t,:) = x;
+        E_log(t,1) = err;
+        info_log(:,:,t) = info;
+
+        % set previous
+        x = xm;
+        xm = xmm;
+
     %%%%%%%%%%%%%%%%%%%% END TIME LOOP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     end
 
@@ -284,7 +239,8 @@ function TRIAL = trajopt(DATA,mode,file,animate,C)
                     'prot',prot,...
                     'dataset_num',C.datasetnum,...
                     'constraint_num',C.constraintnum,...
-                    'timer',telapsed);  
+                    'timer',telapsed,...
+                    'relax',rlx_log);  
                
     %% ANIMATE %%
     if animate

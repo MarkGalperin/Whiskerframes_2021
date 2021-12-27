@@ -19,7 +19,7 @@ addpath('../src/figures');
 
 %% Get (1) trial data TODO: make all
 loadstr = '../output/trial_data/V4_1dof_relaxtest.mat'; 
-% loadstr = '../output/trial_data/post_filtered/V4_1dof_relaxtest_postfilt.mat'; 
+% loadstr = '../output/trial_data/post_filtered/V4test2_postfilt.mat'; 
 % loadstr = '../output/trial_data/3dof_restest8.mat'; 
 % loadstr = '../output/trial_data/hjhjg_evenbias.mat'; 
 % loadstr = '../output/trial_data/bias/two/Sept28_test2.mat'; 
@@ -59,7 +59,7 @@ multi = true;
 if multi
     %% file setup
     multidir = '../output/figures/multi/';
-    file = 'V4_1dof_relaxtest';
+    file = 'V4_1dof';
     filepath = [multidir,file];
     %make directory
     mkdir(filepath)
@@ -83,10 +83,9 @@ if multi
     S.normalized = 0;
     %show overconstraint events
     S.overc = {true,'-r'};
-    S.relax = {true,'-g'};
 
     %range
-    X = 1:size(prot,1); %1:500;
+    X =  1:size(prot,1);
 
     %Generate plot
     conf_plots = plot_config(S,TRIAL,X);

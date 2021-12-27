@@ -71,7 +71,7 @@ function [g_arr,S_i,rlxi] = newconst(x,xm,xmm,C)
     g_arr = [g1,g2,g3,g4,g5,g6,g7,g8]; %array of constraint equation values < 0
     clear g1 g2 g3 g4 g5 g6 g7 g8
     
-    %% relaxation algorithm, if overconstraint
+    %relaxation algorithm, if overconstraint
     rlxi = 0; 
     if ~any(all(g_arr,2)) && isfield(C,'relax') && C.relax == 1
         %try to measure which constraints are "most problematic"
@@ -86,7 +86,7 @@ function [g_arr,S_i,rlxi] = newconst(x,xm,xmm,C)
         if any(sums)
             %find "most problematic" constraint and exclude it
             [~,rlx_i] = max(sums);
-            if rlx_i > 4 %avoid compat. constraints
+            if
                 g_arr(:,rlx_i) = exempt;        
                 %pass this up to be logged
                 rlxi = rlx_i;
@@ -94,7 +94,7 @@ function [g_arr,S_i,rlxi] = newconst(x,xm,xmm,C)
         end
     end
     
-    %% feasible set returned where all constraints are satisfied
+    %feasible set returned where all constraints are satisfied
     S_i = all(g_arr,2);
     
 
