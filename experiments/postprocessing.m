@@ -17,8 +17,8 @@ addpath('../src/circle_fit')
 %% Which post-processes are we running?
 % true = perform this pre-process and write files. false = don't
 run_animate = 0;
-run_filter = 1;
-run_batchfilter = 0;
+run_filter = 0;
+run_batchfilter = 1;
 RUN = [run_animate,...
        run_filter,...
        run_batchfilter]; %add as needed
@@ -83,7 +83,7 @@ if RUN(3)
     
     %% LOAD DATA
     % choose batch directory
-    batch_dir = '../output/trial_data/BATCH_oct16/'; %make sure to end with "/"
+    batch_dir = '../output/trial_data/BATCH/'; %make sure to end with "/"
     SETS = batch_load(batch_dir);
     
     %% LOOP OVER DATA TO FILTER

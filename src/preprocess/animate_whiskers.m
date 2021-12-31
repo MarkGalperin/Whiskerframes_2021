@@ -46,7 +46,7 @@ function complete = animate_whiskers(S,WSK,path)
         clf
         
         %% initialize layout
-        ha = tight_subplot(3,1,[.06 .03],[.1 .01],[.07 .05]);
+        ha = tight_subplot(3,1,[.06 .03],[.1 .1],[.1 .1]); % FUCK THIS USED TO BE SOMETHING ELSE!! SEE HISTORYYYY
         hold on
         
         %% SUBPLOT 1: static ANG plot with moving wiper

@@ -151,7 +151,7 @@ function Fig = plot_config(S,TRIAL,X)
             end
         end
         %plot constraint relaxation events
-        if S.relax{1}
+        if isfield(S,'relax') && S.relax{1}
             if isfield(TRIAL,'overc')
                 events = find(TRIAL.relax(X));
                 if ~isempty(events)

@@ -24,7 +24,7 @@ RUN = [run_writeresults,...
 
 %% LOAD DATA
 % choose batch directory
-batch_dir = '../output/trial_data/BATCH_Dec21/'; %make sure to end with "/"
+batch_dir = '../output/trial_data/BATCH_3dof_relax/'; %make sure to end with "/"
 SETS = batch_load(batch_dir);
 
 %% MAKE RESULTS DIRECTORY
@@ -104,7 +104,7 @@ for set_i = 1:length(SETS)
             
             if RUN(2)
                 %% MAKE FIGURES FOR OPTIMIZATIONS
-                file = 'full_r1r2'; %figure batch directory name
+                file = '500_r1r2'; %figure batch directory name
                 
                 %file setup
                 filepath = [figures_dir,file,'/',trial.TRIAL(opt).file(2:3),'/',sprintf('OPT%d',opt)];
@@ -148,7 +148,7 @@ for set_i = 1:length(SETS)
                 S.overc = {true,'-r'};
 
                 %range
-                X = 1:size(prot,1); %1:500;
+                X = 1:500; %1:size(prot,1);
 
                 %Generate plot
                 conf_plots = plot_config(S,TRIAL,X);

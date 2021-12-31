@@ -1,6 +1,7 @@
-%% BATCH TRIALS 
-% Running everything!!!
-% Updated for v4 on Dec 6th
+%% BATCH TRIALS (simple grid search)
+% December 30th - this is modified to perform grid search on all
+% parameters.
+% Running everything!!! 
 clear;
 clc;
 
@@ -14,54 +15,22 @@ biasalg = false;             %run bias algorithm, which performs two optimizatio
 RES = [0.01, 0.01, 0.001];  %Set Resolution 
 
 %% DEFINE PARAMETERS
-% There are two ways for me to do this: old way (define dynamics as cell)
-% or the 'grid'
-param_mode = 'grid';
-switch param_mode
-    case 'cell'
-        %define a cell datatype with the three dynamic constraint modes
-        % 3-dof
-        dynamics = {struct('R',0.2,'accel',1,'dtheta',pi/2,'ddtheta',0.050),...
-                    struct('R',0.15,'accel',1,'dtheta',pi/2,'ddtheta',0.050),...
-                    struct('R',0.05,'accel',1,'dtheta',pi/2,'ddtheta',0.050),...
-                    struct('R',0.2,'accel',0.5,'dtheta',pi/2,'ddtheta',0.050),...
-                    struct('R',0.2,'accel',0.5,'dtheta',pi/2,'ddtheta',0.050)}; %Dec 21
+dynamics = {struct('R',0.2,'accel',0.2,'dtheta',pi/2,'ddtheta',1)}; %same theta constraints as current favorite 3DOF
 
-        %put all values to loop over in cell arrays (WARNING currently only works for current multiple-value arrays)
-        PARAMS = struct('s',{0.6},...
-                        'c',{0.1},...
-                        'errmode',{'squared'},...
-                        'res',{RES},...
-                        'lb',{[-1 -0.2500 -pi/2]},...
-                        'ub',{[0 1.2500 pi/2]},...
-                        'sb',{[0.4000 0.4000 1.0472]},...
-                        'bias',{'zeros'});
 
-        % Call generate_runs
-        C_TRIALS = generate_runs(dynamics,PARAMS);
-    
-    case 'grid'
-        PARAMS = struct('R',[0.2,0.1,0.05,0.02],...
-                        'accel',[1,0.3,0.15],...
-                        'dtheta',[pi/2,pi/10,pi/30],...
-                        'ddtheta',[1,0.1,0.05,0.03],...
-                        's',[0.6]);
-
-        CONSTANT = struct('c',{0.1},...
-                          'errmode',{'squared'},...
-                          'res',{RES},...
-                          'lb',{[-1 -0.2500 -1.0472]},...
-                          'ub',{[0 1.2500 1.0472]},...
-                          'sb',{[0.2000 0.2000 1.0472]},...
-                          'bias',{'zeros'});
-
-        % Call generate_runs_grid
-        C_TRIALS = generate_runs_grid(PARAMS,CONSTANT);
-end
-
-%get number of trials
+%put all values to loop over in cell arrays (WARNING currently only works for current multiple-value arrays)
+PARAMS = struct('s',{0.6},...
+                'c',{0.1},...
+                'errmode',{'squared'},...
+                'res',{RES},...
+                'lb',{[-1 -0.2500 -pi/2]},...
+                'ub',{[0 1.2500 pi/2]},...
+                'sb',{[0.4000 0.4000 1.0472]},...
+                'bias',{'zeros'});
+            
+% Call generate_runs
+C_TRIALS = generate_runs(dynamics,PARAMS);
 N_TRIALS = length(C_TRIALS);
-fprintf('Running %d constraint cases \n',N_TRIALS);
 
 %% GET DATA
 % scan the filtered processed data directory
@@ -189,7 +158,7 @@ for file_i = files(~skips) %file_i is the index to loop over
         DATA.points = PTS_cut;
 
         %% MODE AND SETUP FOR BOTH OPTIMIZATIONS
-        mode = 'line_3dof';     % 3 modes: 'line_3dof' , 'line_1dof', 'circular' (circular not yet implemented)
+        mode = 'line_1dof';     % 3 modes: 'line_3dof' , 'line_1dof', 'circular' (circular not yet implemented)
         animate = 0;            % generate animation?
         file = sprintf('D%.2d_C%.3d',file_i,trial_i); % file name
         
@@ -225,7 +194,7 @@ for file_i = files(~skips) %file_i is the index to loop over
         file_trial = append('../output/trial_data/bias/one/',file);
         
         %% CONSTRAINT RELAXATION MODE?
-        C.relax = 1;
+        C.relax = 0;
         
         %% last-minute defaults
         C.ovrct = 3;
@@ -237,18 +206,18 @@ for file_i = files(~skips) %file_i is the index to loop over
         fprintf('RUNNING OPTIMIZATION 1 \n');
         TRIAL(1) =  trajopt_v4(DATA,mode,file,animate,C); %TRIAL contains trajectory, error, mode, constraints, and s
         
-        %% RUN OPTIMIZATION #2
-        if biasalg 
-            %calculate biases
-            ypts = TRIAL(1).PTS_bio(2,:,1); 
-            prot = traj2prot(TRIAL(1).traj,TRIAL(1).s,ypts); %prot is [T,N]
-            error = prot2error(prot,TRIAL(1).ANG_bio,'sign','all');
-            %rewrite bias
-            C.bias = -mean(error);
-            % Run Optimization
-            fprintf('RUNNING OPTIMIZATION 2 \n');
-            TRIAL(2) = trajopt(DATA,mode,file,animate,C); %TRIAL contains trajectory, error, mode, constraints, and s
-        end
+%         %% RUN OPTIMIZATION #2
+%         if biasalg 
+%             %calculate biases
+%             ypts = TRIAL(1).PTS_bio(2,:,1); 
+%             prot = traj2prot(TRIAL(1).traj,TRIAL(1).s,ypts); %prot is [T,N]
+%             error = prot2error(prot,TRIAL(1).ANG_bio,'sign','all');
+%             %rewrite bias
+%             C.bias = -mean(error);
+%             % Run Optimization
+%             fprintf('RUNNING OPTIMIZATION 2 \n');
+%             TRIAL(2) = trajopt(DATA,mode,file,animate,C); %TRIAL contains trajectory, error, mode, constraints, and s
+%         end
         
         %% Saving TRIAL
         saveto = [savedir,'/',file];
